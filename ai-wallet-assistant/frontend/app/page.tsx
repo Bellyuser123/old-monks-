@@ -95,7 +95,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          question: chatInput,
+          message: chatInput,
           transaction_data: result ? transactionData : undefined 
         }),
       });
@@ -105,7 +105,7 @@ export default function Home() {
       }
 
       const data = await response.json();
-      const aiMessage: ChatMessage = { type: 'ai', text: data.answer || 'No response' };
+      const aiMessage: ChatMessage = { type: 'ai', text: data.reply || 'No response' };
       const newMessages = [...tempMessages, aiMessage];
       setChatMessages(newMessages);
 
