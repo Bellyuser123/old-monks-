@@ -100,6 +100,22 @@ app.post("/analyze", async (req, res) => {
 
     const aiAnalysis = await analyzeWithAI(transaction_data);
     res.json(aiAnalysis);
+    
+    if (aiAnalysis) {
+        res.json(aiAnalysis);
+    } else {
+        // Ultimate fallback
+        res.json({
+            summary: summary,
+            risk_level: riskLevel,
+            risk_score: riskLevel === "HIGH" ? 95 : (riskLevel === "MEDIUM" ? 60 : 15),
+            risk_factors: risks,
+            explanation: {
+                simple: "We couldn't perform a deep analysis. " + (risks.length > 0 ? "Potential risks: " + risks.join(" ") : "Please review manually."),
+                technical: "AI analysis failed or returned invalid data. Falling back to keyword-based detection."
+            }
+        });
+    }
 });
 
 app.post("/chat", async (req, res) => {
