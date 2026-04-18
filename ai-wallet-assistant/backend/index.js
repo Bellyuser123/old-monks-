@@ -67,7 +67,7 @@ app.post("/analyze", async (req, res) => {
 
         try {
             const completion = await openai.chat.completions.create({
-                model: "gpt-4-turbo",
+                model: "gpt-4o-mini",
                 messages: [
                     {
                         role: "system",
@@ -139,19 +139,17 @@ ${txData}`
 });
 
 app.post("/chat", async (req, res) => {
-    const { question, transaction_data } = req.body;
+    const { message, transaction_data } = req.body;
 
-    if (!question) {
-        return res.status(400).json({ error: "question is required" });
+    if (!message) {
+        return res.status(400).json({ error: "message is required" });
     }
 
     const context = transaction_data ? `Context transaction: ${transaction_data}\n` : '';
-    const fullPrompt = `${context}Question: ${question}`;
+    const fullPrompt = `${context}Question: ${message}`;
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
-        return res.json({
-            answer: "Chat requires OpenAI API key in .env. Question noted for demo."
-        });
+        return res.json({\n            reply: "Chat requires OpenAI API key in .env. Message noted for demo."\n        });
     }
 
     try {
@@ -169,8 +167,7 @@ app.post("/chat", async (req, res) => {
             ]
         });
 
-        const answer = completion.choices[0].message.content;
-        res.json({ answer });
+        const reply = completion.choices[0].message.content;\n        res.json({ reply });
     } catch (error) {
         console.error('Chat OpenAI error:', error);
         res.status(500).json({ error: "Chat analysis failed" });
