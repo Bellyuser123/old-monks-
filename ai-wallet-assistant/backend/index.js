@@ -106,23 +106,27 @@ Also:
         }
     }
 
-    // Make analyzeWithAI async
+    console.log('POST /analyze received:', transaction_data.substring(0, 50) + '...');
+    
+    // Keyword analysis first
+    let keywordRisk = riskLevel;
+    let keywordSummary = summary;
+    
+    // Async AI analysis (no double response)
     analyzeWithAI(transaction_data).then(aiAnalysis => {
-        const explanation = aiAnalysis.explanation || risks.join(" ") || "No specific risks identified. Always double-check contract addresses and amounts.";
-
+        console.log('AI analysis complete:', aiAnalysis.risk_level);
         res.json({
-            summary: aiAnalysis.summary || summary,
-            risk_level: aiAnalysis.risk_level || riskLevel,
-            explanation
+            summary: aiAnalysis.summary || keywordSummary,
+            risk_level: aiAnalysis.risk_level || keywordRisk,
+            explanation: aiAnalysis.explanation
         });
     }).catch(err => {
-        res.status(500).json({ error: "Analysis failed" });
-    });
-
-    res.json({
-        summary,
-        risk_level: riskLevel,
-        explanation
+        console.error('AI analysis error:', err);
+        res.json({
+            summary: keywordSummary,
+            risk_level: keywordRisk,
+            explanation: risks.join(" ") || "Keyword analysis complete. AI temporarily unavailable."
+        });
     });
 });
 
