@@ -149,7 +149,7 @@ app.post("/chat", async (req, res) => {
     const fullPrompt = `${context}Question: ${message}`;
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
-        return res.json({\n            reply: "Chat requires OpenAI API key in .env. Message noted for demo."\n        });
+        return res.json({ reply: "Chat requires OpenAI API key in .env. Message noted for demo." });
     }
 
     try {
@@ -167,7 +167,8 @@ app.post("/chat", async (req, res) => {
             ]
         });
 
-        const reply = completion.choices[0].message.content;\n        res.json({ reply });
+        const reply = completion.choices[0].message.content;
+        res.json({ reply });
     } catch (error) {
         console.error('Chat OpenAI error:', error);
         res.status(500).json({ error: "Chat analysis failed" });
@@ -175,3 +176,4 @@ app.post("/chat", async (req, res) => {
 });
 
 app.listen(5000, () => console.log("AI Wallet Assistant Backend running on port 5000"));
+
