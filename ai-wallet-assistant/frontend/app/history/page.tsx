@@ -1,9 +1,11 @@
+"use client";
+
 import HistoryTable from '@/components/HistoryTable';
-import { getAllAnalyses, clearHistory } from '@/lib/history';
+import { getAllAnalyses, clearHistory, type Analysis } from '@/lib/history';
 import { useEffect, useState } from 'react';
 
 export default function HistoryPage() {
-  const [analyses, setAnalyses] = useState([]);
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
