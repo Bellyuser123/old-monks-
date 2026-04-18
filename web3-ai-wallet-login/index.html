@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MONKS WALLET - Web3 AI Wallet Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* Reset & Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Space Mono', monospace;
+      background: #FFEA00; /* Solid yellow primary bg per specs */
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    /* Scanline overlay for digital aesthetic */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* Typography */
+    .heading {
+      font-family: 'Anton', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Brutalist Container */
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Header */
+    .header {
+      text-align: left;
+      margin-bottom: 60px;
+      border-bottom: 5px solid #000;
+      padding: 30px;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 6px 6px 0px #000;
+    }
+    .logo {
+      font-size: clamp(1rem, 3.5vw, 2.5rem);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      color: #1A1A1A;
+      margin-bottom: 10px;
+      text-shadow: 3px 3px 0px #000;
+      position: relative;
+    }
+    .logo::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.1);
+      z-index: -1;
+    }
+    .hero {
+      font-size: clamp(1.2rem, 4vw, 2rem);
+      color: #1A1A1A;
+      font-weight: 700;
+    }
+
+    /* Tab Switcher */
+    .tabs {
+      display: flex;
+      border: 4px solid #000;
+      background: #FFF;
+      margin-bottom: 30px;
+      box-shadow: 4px 4px 0px #000;
+    }
+    .tab {
+      flex: 1;
+      padding: 20px;
+      background: #FFF;
+      border-right: 3px solid #000;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #1A1A1A;
+      transition: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .tab:last-child {
+      border-right: none;
+    }
+    .tab.active {
+      background: #1A1A1A;
+      color: #FFF;
+    }
+    .tab:hover:not(.active) {
+      transform: translateX(-2px) translateY(-2px);
+      box-shadow: 6px 6px 0px #000;
+    }
+
+    /* Login Card */
+    .login-card {
+      background: #FFF;
+      border: 5px solid #000;
+      padding: 50px 40px;
+      box-shadow: 5px 5px 0px #000;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .login-card:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 8px 8px 0px #000;
+    }
+    .login-card:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 30px;
+      position: relative;
+    }
+    .form-group label {
+      display: block;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1A1A1A;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .input-wrapper {
+      position: relative;
+    }
+    input[type="text"], input[type="password"], input[type="email"] {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid #000;
+      background: #FFF;
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      color: #1A1A1A;
+      box-shadow: 3px 3px 0px #000;
+      transition: all 0.2s ease;
+      border-radius: 0;
+    }
+    input:focus {
+      outline: none;
+      border-color: #00FF87;
+      box-shadow: 6px 6px 0px #00FF87;
+      transform: translate(-2px, -2px);
+      animation: pulse 2s infinite;
+    }
+    input.error {
+      border-color: #FF0000;
+      background: #FFE5E5;
+      box-shadow: 3px 3px 0px #FF0000;
+    }
+    .eye-toggle {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #666;
+    }
+
+    /* Blinking cursor */
+    .blinking-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1.5em;
+      background: #000;
+      animation: blink 1s infinite;
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 25px;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1.2rem;
+      border: 4px solid #000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 0;
+      text-transform: uppercase;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary {
+      background: #1A1A1A;
+      color: #FFF;
+      box-shadow: 5px 5px 0px #000;
+    }
+    .btn-primary:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: 8px 8px 0px #000;
+    }
+    .btn-primary:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+    }
+    .btn-secondary {
+      background: #FFEA00;
+      color: #1A1A1A;
+      box-shadow: 5px 5px 0px #000;
+      margin-top: 20px;
+    }
+    .btn-metamask {
+      background: #FF6B35;
+      color: #FFF;
+      border-color: #000;
+    }
+    .btn-walletconnect {
+      background: #3B99FC;
+      color: #FFF;
+      border-color: #000;
+      margin-top: 15px;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .btn-loading span {
+      visibility: hidden;
+    }
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 6px 6px 0px #00FF87; }
+      50% { box-shadow: 8px 8px 0px #00FF87; }
+    }
+
+    /* OR Divider */
+    .divider {
+      text-align: center;
+      margin: 30px 0;
+      position: relative;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #000;
+    }
+    .divider span {
+      background: #FFF;
+      padding: 0 20px;
+      font-weight: 700;
+      color: #1A1A1A;
+      font-size: 1.1rem;
+      position: relative;
+    }
+
+    /* Error/Success Messages */
+    .message {
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 3px solid;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      text-align: center;
+    }
+    .error-msg {
+      background: #FFF;
+      color: #FF0000;
+      border-color: #FF0000;
+      box-shadow: 3px 3px 0px #FF0000;
+    }
+    .success-msg {
+      background: #FFF;
+      color: #00FF87;
+      border-color: #00FF87;
+      box-shadow: 3px 3px 0px #00FF87;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 4px solid #000;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      color: #1A1A1A;
+      opacity: 0.8;
+    }
+
+    /* Icons (SVG emojis fallback) */
+    .metamask-icon::before {
+      content: '🦊';
+      font-size: 1.5rem;
+      margin-right: 10px;
+    }
+    .walletconnect-icon::before {
+      content: '🔗';
+      font-size: 1.5rem;
+      margin-right: 10px;
+    }
+
+    /* Responsive Mobile */
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 15px;
+      }
+      .header {
+        padding: 20px 15px;
+      }
+      .login-card {
+        padding: 40px 25px;
+      }
+      .tabs {
+        flex-direction: column;
+      }
+      .tab {
+        border-right: none;
+        border-bottom: 3px solid #000;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="logo heading">MONKS WALLET</h1>
+      <p class="hero heading">YOUR AI-POWERED WEB3 WALLET<span class="blinking-cursor"></span></p>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="login">LOGIN</div>
+      <div class="tab" data-tab="signup">SIGN UP</div>
+    </div>
+
+    <div id="login-form" class="login-card">
+      <form id="auth-form">
+        <div id="wallet-group" class="form-group">
+          <label for="wallet-address">Wallet Address</label>
+          <div class="input-wrapper">
+            <input type="text" id="wallet-address" placeholder="0x... Enter Wallet Address" required>
+          </div>
+        </div>
+        <div id="password-group" class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" placeholder="Enter Password" required>
+            <button type="button" class="eye-toggle" id="eye-toggle" tabindex="-1">👁</button>
+          </div>
+        </div>
+        <div id="email-group" class="form-group" style="display: none;">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Enter Email">
+        </div>
+        <div id="confirm-password-group" class="form-group" style="display: none;">
+          <label for="confirm-password">Confirm Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="confirm-password" placeholder="Confirm Password">
+            <button type="button" class="eye-toggle" id="confirm-eye-toggle" tabindex="-1">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <span>CONNECT WALLET</span>
+        </button>
+      </form>
+      <div class="divider">
+        <span>OR</span>
+      </div>
+      <button class="btn btn-secondary metamask-icon">Connect MetaMask</button>
+      <button class="btn btn-walletconnect walletconnect-icon">Connect WalletConnect</button>
+    </div>
+
+    <div id="error-msg" class="message error-msg" style="display: none;"></div>
+    <div id="success-msg" class="message success-msg" style="display: none;"></div>
+
+    <footer class="footer">
+      Secured by AI | Decentralized | No KYC
+    </footer>
+  </div>
+
+  <script>
+    // Elements
+    const tabs = document.querySelectorAll('.tab');
+    const loginForm = document.getElementById('login-form');
+    const authForm = document.getElementById('auth-form');
+    const walletGroup = document.getElementById('wallet-group');
+    const passwordGroup = document.getElementById('password-group');
+    const emailGroup = document.getElementById('email-group');
+    const confirmPasswordGroup = document.getElementById('confirm-password-group');
+    const connectBtn = authForm.querySelector('.btn-primary');
+    const eyeToggle = document.getElementById('eye-toggle');
+    const confirmEyeToggle = document.getElementById('confirm-eye-toggle');
+    const errorMsg = document.getElementById('error-msg');
+    const successMsg = document.getElementById('success-msg');
+
+    let currentView = 'login';
+    let passwordVisible = false;
+    let confirmPasswordVisible = false;
+
+    // Tab Toggle
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const view = tab.dataset.tab;
+        if (view === currentView) return;
+
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Toggle form fields
+        if (view === 'signup') {
+          emailGroup.style.display = 'block';
+          confirmPasswordGroup.style.display = 'block';
+          connectBtn.querySelector('span').textContent = 'CREATE ACCOUNT';
+          currentView = 'signup';
+        } else {
+          emailGroup.style.display = 'none';
+          confirmPasswordGroup.style.display = 'none';
+          connectBtn.querySelector('span').textContent = 'CONNECT WALLET';
+          currentView = 'login';
+        }
+      });
+    });
+
+    // Password Eye Toggle
+    eyeToggle.addEventListener('click', () => {
+      const pwdInput = document.getElementById('password');
+      passwordVisible = !passwordVisible;
+      pwdInput.type = passwordVisible ? 'text' : 'password';
+      eyeToggle.textContent = passwordVisible ? '🙈' : '👁';
+    });
+
+    confirmEyeToggle.addEventListener('click', () => {
+      const confirmInput = document.getElementById('confirm-password');
+      confirmPasswordVisible = !confirmPasswordVisible;
+      confirmInput.type = confirmPasswordVisible ? 'text' : 'password';
+      confirmEyeToggle.textContent = confirmPasswordVisible ? '🙈' : '👁';
+    });
+
+    // Wallet Address Validation (simple regex)
+    const validateWallet = (addr) => {
+      const walletRegex = /^0x[a-fA-F0-9]{40}$/;
+      return walletRegex.test(addr);
+    };
+
+    // Form Submit
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const walletAddr = document.getElementById('wallet-address').value.trim();
+      const password = document.getElementById('password').value;
+      const email = document.getElementById('email').value.trim();
+      const confirmPwd = document.getElementById('confirm-password').value;
+
+      // Reset errors
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+
+      let valid = true;
+      let errors = [];
+
+      if (!validateWallet(walletAddr)) {
+        document.getElementById('wallet-address').classList.add('error');
+        errors.push('Invalid wallet address (must be 0x + 40 hex chars)');
+        valid = false;
+      }
+      if (password.length < 6) {
+        document.getElementById('password').classList.add('error');
+        errors.push('Password must be at least 6 characters');
+        valid = false;
+      }
+      if (currentView === 'signup') {
+        if (!email || !email.includes('@')) {
+          document.getElementById('email').classList.add('error');
+          errors.push('Valid email required');
+          valid = false;
+        }
+        if (confirmPwd !== password) {
+          document.getElementById('confirm-password').classList.add('error');
+          errors.push('Passwords do not match');
+          valid = false;
+        }
+      }
+
+      if (!valid) {
+        errorMsg.textContent = errors.join(', ');
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      // Fake loading
+      connectBtn.disabled = true;
+      connectBtn.classList.add('btn-loading');
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      connectBtn.disabled = false;
+      connectBtn.classList.remove('btn-loading');
+      connectBtn.querySelector('span').textContent = currentView === 'signup' ? 'ACCOUNT CREATED' : 'CONNECTED';
+
+      successMsg.textContent = currentView === 'signup' 
+        ? 'Account created successfully! Welcome to CryptoWallet.AI' 
+        : 'Wallet connected! AI security active.';
+      successMsg.style.display = 'block';
+
+      // Reset form after 3s
+      setTimeout(() => {
+        authForm.reset();
+        connectBtn.querySelector('span').textContent = currentView === 'signup' ? 'CREATE ACCOUNT' : 'CONNECT WALLET';
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
+        document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      }, 3000);
+    });
+
+    // Wallet Connect Buttons (fake)
+    document.querySelector('.btn-secondary').addEventListener('click', () => {
+      alert('🦊 MetaMask detected! Connecting... (Demo mode)');
+    });
+    document.querySelector('.btn-walletconnect').addEventListener('click', () => {
+      alert('🔗 WalletConnect QR scanned! Connecting... (Demo mode)');
+    });
+
+    // Input pulsing on focus
+    ['wallet-address', 'password', 'email', 'confirm-password'].forEach(id => {
+      document.getElementById(id).addEventListener('focus', function() {
+        this.parentElement.parentElement.classList.add('focused');
+      });
+      document.getElementById(id).addEventListener('blur', function() {
+        this.parentElement.parentElement.classList.remove('focused');
+      });
+    });
+  </script>
+</body>
+</html>
+">
+</xai:function_call > 
+
+Now update TODO.md to mark step complete. 
+
+<xai:function_call name="edit_file">
+<parameter name="path">c:/Users/dell/Documents/GitHub/old-monks-/web3-ai-wallet-login/TODO.md

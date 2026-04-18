@@ -1,69 +1,62 @@
 "use client";
 
-import HistoryTable from '@/components/HistoryTable';
-import { getAllAnalyses, clearHistory, type Analysis } from '@/lib/history';
-import { useEffect, useState } from 'react';
+import { getAllAnalyses } from '@/lib/history';
+import HistoryCard from '@/components/HistoryCard';
+import SafetyPanel from '@/components/SafetyPanel';
+import StatsPanel from '@/components/StatsPanel';
 import Link from 'next/link';
 
 export default function HistoryPage() {
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const data = getAllAnalyses();
-    setAnalyses(data);
-    setLoading(false);
-  }, []);
-
-  const handleClear = () => {
-    if (confirm('Clear all history? This cannot be undone.')) {
-      clearHistory();
-      setAnalyses([]);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="border-8 border-black bg-white shadow-[20px_20px_0_black] p-12 rotate-2">
-          <div className="animate-pulse bg-gray-200 h-12 w-48 mb-4"></div>
-          <div className="space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const analyses = getAllAnalyses();
 
   return (
-    <main className="min-h-screen py-8 px-4 md:px-8 lg:px-16 bg-[#f5f5f5] font-black">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-8 border-4 border-black bg-white p-6 shadow-[12px_12px_0_black] rotate-[-0.5deg]">
-          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-4 bg-black text-white p-2 inline-block">
-            ANALYSIS HISTORY
+    <main className="min-h-screen py-12 px-6 md:px-12 lg:px-24 bg-gradient-to-br from-gray-50 to-white">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-6xl lg:text-7xl font-black uppercase tracking-widest mb-6 bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text">
+            Analysis History
           </h1>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
-            <button
-              onClick={handleClear}
-              className="px-6 py-3 bg-red-500 text-white border-4 border-black font-black text-lg uppercase tracking-wider shadow-[6px_6px_0_black] hover:shadow-[3px_3px_0_black] hover:translate-x-[3px] hover:translate-y-[3px] transition-all duration-100 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
-            >
-              PURGE DATA
-            </button>
-            <Link
-              href="/"
-              className="px-6 py-3 bg-[#ffd700] text-black border-4 border-black font-black text-lg uppercase tracking-wider shadow-[6px_6px_0_black] hover:shadow-[3px_3px_0_black] hover:translate-x-[3px] hover:translate-y-[3px] transition-all duration-100"
-            >
-              ← BACK
-            </Link>
-          </div>
+          <Link 
+            href="/"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-green-500 text-white border-4 border-black font-black uppercase tracking-wide text-xl shadow-[8px_8px_0_black] hover:shadow-[4px_4px_0_black] hover:translate-x-[4px] hover:translate-y-[4px]"
+          >
+            ← New Analysis
+          </Link>
         </div>
-        
-        <div className="bg-white border-4 border-black shadow-[16px_16px_0_black]">
-          <HistoryTable analyses={analyses} />
+
+        {/* Stats & Safety */}
+        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+          <StatsPanel />
+          <SafetyPanel />
+        </div>
+
+        {/* History List */}
+        <div className="border-8 border-black bg-white shadow-[30px_30px_0_black] rotate-1 p-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {analyses.length === 0 ? (
+              <div className="col-span-full text-center py-24">
+                <h2 className="text-4xl font-black uppercase mb-8 tracking-wide border-b-4 border-black pb-4 inline-block">
+                  No Analyses Yet
+                </h2>
+                <p className="text-xl text-gray-600 mb-8">
+                  Start your first transaction analysis to see history here
+                </p>
+                <Link 
+                  href="/"
+                  className="px-8 py-4 bg-blue-500 text-white border-4 border-blue-700 font-black text-xl uppercase shadow-[8px_8px_0_#1d4ed8] hover:shadow-[4px_4px_0_#1d4ed8]"
+                >
+                  Analyze First Transaction
+                </Link>
+              </div>
+            ) : (
+              analyses.map((analysis) => (
+                <HistoryCard key={analysis.id} analysis={analysis} />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </main>
   );
 }
-

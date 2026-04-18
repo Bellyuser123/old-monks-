@@ -1,51 +1,34 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Analysis } from '@/lib/history';
-import StatusBadge from './StatusBadge';
+import { useState } from 'react';
 
-interface HistoryTableProps {
-  analyses: Analysis[];
-}
-
-export default function HistoryTable({ analyses }: HistoryTableProps) {
-  const router = useRouter();
-  const [search, setSearch] = useState('');
-
-  const filteredAnalyses = useMemo(() => {
-    if (!search) return analyses;
-    const q = search.toLowerCase();
-    return analyses.filter(a => 
-      a.inputText.toLowerCase().includes(q) ||
-      a.result.summary.toLowerCase().includes(q)
-    );
-  }, [analyses, search]);
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const truncate = (text: string, max: number) => 
-    text.length > max ? text.slice(0, max) + '...' : text;
-
-  if (filteredAnalyses.length === 0) {
-    return (
-      <div className="border-8 border-black bg-white shadow-[20px_20px_0_black] rotate-1 p-12 text-center">
-        <h2 className="text-4xl font-black uppercase tracking-widest mb-4 text-black">NO ANALYSES</h2>
-        <p className="text-xl font-mono text-gray-600">Start analyzing transactions to see history here.</p>
-      </div>
-    );
-  }
-
+export default function HistoryTable() {
   return (
+<<<<<<< HEAD
+    <div style={{
+      padding: '64px 32px',
+      textAlign: 'center',
+      maxWidth: '900px',
+      margin: '0 auto'
+    }}>
+      <h2 style={{
+        fontSize: '48px',
+        fontWeight: '900',
+        color: '#111',
+        marginBottom: '32px',
+        lineHeight: 1.1
+      }}>
+        History Coming Soon
+      </h2>
+      <p style={{
+        fontSize: '20px',
+        color: '#666',
+        margin: 0,
+        lineHeight: 1.5
+      }}>
+        Analysis history will appear here
+      </p>
+=======
     <div className="w-full">
       <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center px-4 pt-6">
         <div className="relative flex-1 w-full group">
@@ -95,6 +78,7 @@ export default function HistoryTable({ analyses }: HistoryTableProps) {
           </tbody>
         </table>
       </div>
+>>>>>>> 8c02ef48f325ea3b08178f8e8c515fc25bb8ca7b
     </div>
   );
 }
