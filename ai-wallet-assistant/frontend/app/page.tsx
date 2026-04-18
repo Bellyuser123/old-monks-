@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { saveAnalysis, createAnalysis } from '@/lib/history';
 import Link from 'next/link';
+import Header from '@/components/Header';
 
 interface AnalysisResult {
   summary: string;
@@ -156,13 +157,15 @@ export default function Home() {
   };
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      padding: '4rem 2rem',
-      backgroundColor: '#f5f5f5',
-      fontFamily: '"Arial Black", Arial, sans-serif',
-      lineHeight: 1.4
-    }}>
+    <>
+      <Header />
+      <main style={{
+        minHeight: '100vh',
+        padding: '4rem 2rem',
+        backgroundColor: '#f5f5f5',
+        fontFamily: '"Arial Black", Arial, sans-serif',
+        lineHeight: 1.4
+      }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
@@ -548,6 +551,7 @@ export default function Home() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 

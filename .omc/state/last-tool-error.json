@@ -1,0 +1,7 @@
+{
+  "tool_name": "WebFetch",
+  "tool_input_preview": "{\"url\":\"http://localhost:3000/history\",\"prompt\":\"Check if this page contains any wallet connect button or appkit-button elements in the HTML\"}",
+  "error": "Invalid URL",
+  "timestamp": "2026-04-18T22:17:44.221Z",
+  "retry_count": 2
+}
