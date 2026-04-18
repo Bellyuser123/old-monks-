@@ -106,7 +106,6 @@ Also:
         }
     }
 
-    // Make analyzeWithAI async
     analyzeWithAI(transaction_data).then(aiAnalysis => {
         const explanation = aiAnalysis.explanation || risks.join(" ") || "No specific risks identified. Always double-check contract addresses and amounts.";
 
@@ -118,13 +117,8 @@ Also:
     }).catch(err => {
         res.status(500).json({ error: "Analysis failed" });
     });
-
-    res.json({
-        summary,
-        risk_level: riskLevel,
-        explanation
-    });
 });
+
 
 app.post("/chat", async (req, res) => {
     const { question, transaction_data } = req.body;
