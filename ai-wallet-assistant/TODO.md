@@ -8,6 +8,6 @@
 - [ ] Create backend/.env (OPENAI_API_KEY placeholder)
 
 ### 2. Backend Logic Upgrades (index.js)
-- [ ] Require dotenv, OpenAI client
-- [ ] Implement real analyzeWithAI() with OpenAI chat.completions + structured prompt
-- [ ] Parse AI response to {summary, risk
+- [x] Require dotenv, OpenAI client
+- [x] Implement real analyzeWithAI() with OpenAI chat.completions + structured prompt
+- [x] Parse AI response to {summary, risk_level, explanation}
