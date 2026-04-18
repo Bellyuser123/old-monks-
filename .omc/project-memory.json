@@ -52,6 +52,12 @@
       "type": "file"
     },
     {
+      "path": "ai-wallet-assistant\\frontend\\app\\history\\page.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1776551568201,
+      "type": "file"
+    },
+    {
       "path": "ai-wallet-assistant\\frontend",
       "accessCount": 2,
       "lastAccessed": 1776550440910,
@@ -64,15 +70,21 @@
       "type": "file"
     },
     {
-      "path": "ai-wallet-assistant\\frontend\\app\\layout.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1776550251576,
+      "path": "ai-wallet-assistant\\frontend\\components\\HistoryTable.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1776551663538,
       "type": "file"
     },
     {
-      "path": "ai-wallet-assistant\\frontend\\app\\history\\page.tsx",
+      "path": "ai-wallet-assistant\\frontend\\components\\StatusBadge.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1776551697195,
+      "type": "file"
+    },
+    {
+      "path": "ai-wallet-assistant\\frontend\\app\\layout.tsx",
       "accessCount": 1,
-      "lastAccessed": 1776550268597,
+      "lastAccessed": 1776550251576,
       "type": "file"
     },
     {
@@ -97,6 +109,12 @@
       "path": "ai-wallet-assistant\\frontend\\lib\\web3Config.ts",
       "accessCount": 1,
       "lastAccessed": 1776550415261,
+      "type": "file"
+    },
+    {
+      "path": "ai-wallet-assistant\\frontend\\lib\\history.ts",
+      "accessCount": 1,
+      "lastAccessed": 1776551421350,
       "type": "file"
     }
   ],
