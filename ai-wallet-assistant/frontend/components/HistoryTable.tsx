@@ -81,44 +81,70 @@ export default function HistoryTable({ analyses }: HistoryTableProps) {
     <div style={{ width: '100%' }}>
       {/* Search Bar */}
       <div style={{
-        padding: '1.5rem',
-        borderBottom: '4px solid black',
+        padding: '2rem 0',
+        marginBottom: '2rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.75rem',
-        alignItems: 'center'
+        gap: '1rem'
       }}>
-        <div style={{ display: 'flex', gap: '1rem', width: '100%', maxWidth: '600px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '100%' }}>
           <input
             type="text"
-            placeholder="Search transactions..."
+            placeholder="Search by transaction summary or input..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              flex: 1,
-              padding: '1rem 1.25rem',
+              width: '100%',
+              padding: '1.25rem 1.5rem',
               border: '4px solid black',
-              backgroundColor: '#f9fafb',
+              backgroundColor: 'white',
               fontFamily: 'monospace',
-              fontSize: '1rem',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
               boxShadow: '6px 6px 0 black',
-              outline: 'none'
+              outline: 'none',
+              transition: 'all 0.1s'
             }}
           />
+          <div style={{
+            position: 'absolute',
+            right: '1.5rem',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            fontSize: '1.25rem',
+            pointerEvents: 'none'
+          }}>
+            🔍
+          </div>
         </div>
-        <span style={{ fontSize: '0.875rem', fontFamily: 'monospace', color: '#6b7280' }}>
-          Showing {filteredAnalyses.length} of {analyses.length} transactions
-        </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '1rem', fontWeight: '900', fontFamily: 'monospace', color: 'black' }}>
+            TOTAL RESULTS: {filteredAnalyses.length}
+          </span>
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              style={{
+                background: 'none',
+                border: 'none',
+                textDecoration: 'underline',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontFamily: 'monospace'
+              }}
+            >
+              CLEAR SEARCH
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Cards Grid */}
+      {/* Cards List */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-        gap: '1rem',
-        padding: '1.5rem',
-        maxHeight: '60vh',
-        overflowY: 'auto'
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        marginBottom: '2rem'
       }}>
         {filteredAnalyses.map((analysis) => (
           <div
@@ -127,86 +153,105 @@ export default function HistoryTable({ analyses }: HistoryTableProps) {
             style={{
               border: '4px solid black',
               backgroundColor: 'white',
-              boxShadow: '6px 6px 0 black',
-              padding: '1.25rem',
+              boxShadow: '8px 8px 0 black',
+              padding: '1.5rem',
               cursor: 'pointer',
-              transition: 'all 0.15s',
+              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              position: 'relative',
+              overflow: 'hidden'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '8px 8px 0 black';
-              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '12px 12px 0 black';
+              e.currentTarget.style.transform = 'translate(-2px, -2px)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '6px 6px 0 black';
-              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '8px 8px 0 black';
+              e.currentTarget.style.transform = 'translate(0, 0)';
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.transform = 'translate(4px, 4px)';
               e.currentTarget.style.boxShadow = '2px 2px 0 black';
             }}
             onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '8px 8px 0 black';
+              e.currentTarget.style.transform = 'translate(-2px, -2px)';
+              e.currentTarget.style.boxShadow = '12px 12px 0 black';
             }}
           >
-            {/* Risk Badge */}
-            <div style={{
-              display: 'inline-block',
-              padding: '0.5rem 1rem',
-              border: '3px solid black',
-              fontWeight: '900',
-              fontSize: '0.875rem',
-              textTransform: 'uppercase',
-              fontFamily: '"Arial Black", sans-serif',
-              marginBottom: '1rem',
-              boxShadow: '4px 4px 0 black',
-              ...getRiskStyle(analysis.result.status)
-            }}>
-              {analysis.result.status}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{
+                display: 'inline-block',
+                padding: '0.4rem 1rem',
+                border: '4px solid black',
+                fontWeight: '900',
+                fontSize: '0.8rem',
+                textTransform: 'uppercase',
+                fontFamily: '"Arial Black", sans-serif',
+                ...getRiskStyle(analysis.result.status)
+              }}>
+                {analysis.result.status}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: 'black',
+                fontWeight: 'bold',
+                fontFamily: 'monospace'
+              }}>
+                ID: {analysis.id.slice(0, 8)}...
+              </div>
             </div>
 
-            {/* Summary */}
-            <h3 style={{
-              fontSize: '1.125rem',
-              fontWeight: '700',
-              color: 'black',
-              marginBottom: '0.75rem',
-              lineHeight: 1.3,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
-            }}>
-              {analysis.result.summary}
-            </h3>
+            <div>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '900',
+                color: 'black',
+                marginBottom: '0.5rem',
+                fontFamily: '"Arial Black", sans-serif',
+                lineHeight: '1.2'
+              }}>
+                {analysis.result.summary}
+              </h3>
+              <p style={{
+                fontSize: '1rem',
+                color: '#000',
+                fontFamily: 'monospace',
+                lineHeight: '1.5',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}>
+                {analysis.inputText}
+              </p>
+            </div>
 
-            {/* Input Text Preview */}
-            <p style={{
-              fontSize: '0.875rem',
-              color: '#4b5563',
-              fontFamily: 'monospace',
-              marginBottom: '1rem',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              lineHeight: 1.4
-            }}>
-              {truncate(analysis.inputText, 100)}
-            </p>
-
-            {/* Date */}
             <div style={{
-              fontSize: '0.75rem',
-              color: '#9ca3af',
-              fontFamily: 'monospace',
-              borderTop: '2px solid #e5e7eb',
-              paddingTop: '0.75rem',
+              marginTop: 'auto',
+              paddingTop: '1rem',
+              borderTop: '4px solid black',
               display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              📅 {formatDate(analysis.timestamp)}
+              <div style={{
+                fontSize: '0.875rem',
+                color: 'black',
+                fontWeight: 'bold',
+                fontFamily: 'monospace'
+              }}>
+                DATE: {formatDate(analysis.timestamp)}
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                fontWeight: '900',
+                fontFamily: 'monospace',
+                textDecoration: 'underline'
+              }}>
+                VIEW FULL ANALYSIS →
+              </div>
             </div>
           </div>
         ))}

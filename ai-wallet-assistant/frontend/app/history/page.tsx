@@ -76,25 +76,44 @@ export default function HistoryPage() {
   }
 
   return (
-    <main style={{ minHeight: '100vh', padding: '2rem 1.5rem', backgroundColor: '#f9fafb' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <main style={{ minHeight: '100vh', padding: '2.5rem 1.5rem', backgroundColor: '#f9fafb' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
 
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{
-            fontSize: '4rem',
-            fontWeight: '900',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: 'black',
-            marginBottom: '0.5rem',
-            fontFamily: '"Arial Black", sans-serif'
-          }}>
-            ANALYSIS HISTORY
-          </h1>
-          <p style={{ fontSize: '1.1rem', color: '#4b5563', fontFamily: 'monospace' }}>
-            Your transaction security record
-          </p>
+        {/* Header - More Compact */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem', borderBottom: '4px solid black', paddingBottom: '1rem' }}>
+          <div>
+            <h1 style={{
+              fontSize: '2.5rem',
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              color: 'black',
+              fontFamily: '"Arial Black", sans-serif',
+              lineHeight: '1'
+            }}>
+              ANALYSIS <span style={{ backgroundColor: '#ffd600', padding: '0 0.3rem' }}>HISTORY</span>
+            </h1>
+            <p style={{ fontSize: '1rem', color: '#000', fontWeight: 'bold', fontFamily: 'monospace', marginTop: '0.5rem' }}>
+              &gt; Your crypto security track record
+            </p>
+          </div>
+          
+          <button
+            onClick={handleClear}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'white',
+              color: 'black',
+              border: '4px solid black',
+              fontSize: '0.75rem',
+              fontWeight: '900',
+              fontFamily: '"Arial Black", sans-serif',
+              cursor: 'pointer',
+              boxShadow: '4px 4px 0 black',
+              textTransform: 'uppercase'
+            }}
+          >
+            Clear History
+          </button>
         </div>
 
         {/* Empty State */}
@@ -102,191 +121,98 @@ export default function HistoryPage() {
           <div style={{
             border: '4px solid black',
             backgroundColor: 'white',
-            boxShadow: '6px 6px 0 black',
+            boxShadow: '8px 8px 0 black',
             padding: '4rem 2rem',
             textAlign: 'center',
-            maxWidth: '500px',
-            margin: '0 auto'
+            maxWidth: '600px',
+            margin: '4rem auto'
           }}>
-            <div style={{
-              fontSize: '4rem',
-              marginBottom: '1rem'
-            }}>
-              📭
-            </div>
-            <h2 style={{
-              fontSize: '2rem',
-              fontWeight: '900',
-              color: 'black',
-              marginBottom: '0.5rem',
-              fontFamily: '"Arial Black", sans-serif'
-            }}>
-              NO TRANSACTIONS YET
+            <h2 style={{ fontSize: '2rem', fontWeight: '900', color: 'black', marginBottom: '1rem', fontFamily: '"Arial Black", sans-serif' }}>
+              EMPTY HISTORY
             </h2>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontFamily: 'monospace' }}>
-              Start analyzing transactions to see history here.
-            </p>
             <Link href="/" style={{
               display: 'inline-block',
               padding: '1rem 2rem',
-              backgroundColor: 'black',
-              color: 'white',
+              backgroundColor: '#00e676',
+              color: 'black',
               textDecoration: 'none',
-              fontWeight: 'bold',
+              fontWeight: '900',
               border: '4px solid black',
               boxShadow: '4px 4px 0 black',
               fontFamily: '"Arial Black", sans-serif',
-              textTransform: 'uppercase',
-              transition: 'all 0.1s'
+              textTransform: 'uppercase'
             }}>
-              ANALYZE NOW →
+              START ANALYSIS →
             </Link>
           </div>
         ) : (
           <>
-            {/* Stats Panel */}
+            {/* Unified Dashboard Section */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: '2fr 3fr',
               gap: '1rem',
-              marginBottom: '1.5rem'
+              marginBottom: '2rem'
             }}>
-              <div style={{
-                border: '4px solid black',
-                backgroundColor: 'white',
-                boxShadow: '6px 6px 0 black',
-                padding: '1.5rem',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '3rem', fontWeight: '900', color: 'black', fontFamily: '"Arial Black", sans-serif' }}>
-                  {stats.total}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Total Transactions
-                </div>
-              </div>
-              <div style={{
-                border: '4px solid black',
-                backgroundColor: 'white',
-                boxShadow: '6px 6px 0 black',
-                padding: '1.5rem',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '3rem', fontWeight: '900', color: '#ff3b3b', fontFamily: '"Arial Black", sans-serif' }}>
-                  {stats.critical}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  High Risk
-                </div>
-              </div>
-              <div style={{
-                border: '4px solid black',
-                backgroundColor: 'white',
-                boxShadow: '6px 6px 0 black',
-                padding: '1.5rem',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '3rem', fontWeight: '900', color: '#00e676', fontFamily: '"Arial Black", sans-serif' }}>
-                  {stats.safePercent}%
-                </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Safe Rate
-                </div>
-              </div>
-            </div>
-
-            {/* Safety Overview */}
-            <div style={{
-              border: '4px solid black',
-              backgroundColor: 'white',
-              boxShadow: '6px 6px 0 black',
-              padding: '1.5rem',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: '900',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: '1rem',
-                fontFamily: '"Arial Black", sans-serif',
-                borderBottom: '4px solid black',
-                paddingBottom: '0.75rem'
-              }}>
-                🛡️ SAFETY OVERVIEW
-              </h2>
+              {/* Stats Mini-Panel */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '1rem',
-                textAlign: 'center'
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.75rem'
               }}>
-                {[
-                  { label: 'Week', status: safetyOverview.week },
-                  { label: 'Month', status: safetyOverview.month },
-                  { label: 'Year', status: safetyOverview.year }
-                ].map(({ label, status }) => (
-                  <div key={label}>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace', textTransform: 'uppercase' }}>
-                      {label}
-                    </div>
-                    <div style={{
-                      fontSize: '1.25rem',
-                      fontWeight: '900',
-                      fontFamily: '"Arial Black", sans-serif',
-                      color: status === 'SAFE' ? '#00e676' : status === 'CAUTION' ? '#ffd600' : '#9ca3af'
-                    }}>
-                      {status === 'SAFE' && '✅ SAFE'}
-                      {status === 'CAUTION' && '⚠️ CAUTION'}
-                      {status === 'N/A' && '— N/A'}
-                    </div>
+                <div style={{ border: '4px solid black', backgroundColor: 'white', padding: '1rem', boxShadow: '5px 5px 0 black' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '900', fontFamily: 'monospace', textTransform: 'uppercase' }}>TOT</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: '900', fontFamily: '"Arial Black", sans-serif' }}>{stats.total}</div>
+                </div>
+                <div style={{ border: '4px solid black', backgroundColor: '#ff3b3b', color: 'white', padding: '1rem', boxShadow: '5px 5px 0 black' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '900', fontFamily: 'monospace', textTransform: 'uppercase' }}>RISK</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: '900', fontFamily: '"Arial Black", sans-serif' }}>{stats.critical}</div>
+                </div>
+                <div style={{ border: '4px solid black', backgroundColor: '#00e676', padding: '1rem', boxShadow: '5px 5px 0 black', gridColumn: 'span 2' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '900', fontFamily: 'monospace', textTransform: 'uppercase' }}>SAFE RATE</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '900', fontFamily: '"Arial Black", sans-serif' }}>{stats.safePercent}%</div>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Safety Timeline Mini-Panel */}
+              <div style={{
+                border: '4px solid black',
+                backgroundColor: 'white',
+                padding: '1rem',
+                boxShadow: '5px 5px 0 black',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: '900', fontFamily: 'monospace', marginBottom: '0.75rem', borderBottom: '2px solid black', paddingBottom: '0.25rem' }}>
+                  OVERVIEW STATUS
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                  {[
+                    { label: 'WEEK', status: safetyOverview.week },
+                    { label: 'MONTH', status: safetyOverview.month },
+                    { label: 'YEAR', status: safetyOverview.year }
+                  ].map(({ label, status }) => (
+                    <div key={label} style={{
+                      textAlign: 'center',
+                      padding: '0.4rem',
+                      border: '2px solid black',
+                      backgroundColor: status === 'SAFE' ? '#00e676' : status === 'CAUTION' ? '#ffd600' : '#f3f4f6'
+                    }}>
+                      <div style={{ fontSize: '0.6rem', fontWeight: '900', fontFamily: 'monospace' }}>{label}</div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '900' }}>
+                        {status === 'SAFE' ? 'SAFE' : status === 'CAUTION' ? 'RISK' : 'N/A'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* History Table */}
-            <div style={{
-              border: '4px solid black',
-              backgroundColor: 'white',
-              boxShadow: '6px 6px 0 black'
-            }}>
-              <HistoryTable analyses={analyses} />
-            </div>
-
-            {/* Clear Button */}
-            <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-              <button
-                onClick={handleClear}
-                style={{
-                  padding: '1rem 2rem',
-                  backgroundColor: '#ff3b3b',
-                  color: 'white',
-                  border: '4px solid black',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  fontFamily: '"Arial Black", sans-serif',
-                  cursor: 'pointer',
-                  boxShadow: '6px 6px 0 black',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.1s'
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'translate(4px, 4px)';
-                  e.currentTarget.style.boxShadow = '2px 2px 0 black';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = '';
-                  e.currentTarget.style.boxShadow = '6px 6px 0 black';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = '';
-                  e.currentTarget.style.boxShadow = '6px 6px 0 black';
-                }}
-              >
-                Clear All History
-              </button>
-            </div>
+            {/* History Table (Cards) */}
+            <HistoryTable analyses={analyses} />
           </>
         )}
       </div>
