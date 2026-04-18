@@ -1,13 +1,19 @@
-# AI Wallet Assistant - AI Upgrade TODO
+# Backend OpenAI Upgrade - COMPLETE ✅
 
-## Approved Plan Steps (from user feedback)
+All steps done:
+- [x] .env.example created
+- [x] /chat standardized to { message, transaction_data? } → { reply }
+- [x] gpt-4o-mini for both endpoints
+- [x] Fallbacks: keyword + no-key + error handling intact
 
-### 1. Backend Dependencies & Setup
-- [ ] Update backend/package.json (add openai dep)
-- [ ] Install deps (npm install)
-- [ ] Create backend/.env (OPENAI_API_KEY placeholder)
+## Test:
+cd ai-wallet-assistant/backend && npm start
 
-### 2. Backend Logic Upgrades (index.js)
-- [ ] Require dotenv, OpenAI client
-- [ ] Implement real analyzeWithAI() with OpenAI chat.completions + structured prompt
-- [ ] Parse AI response to {summary, risk
+**Endpoints ready:**
+POST /analyze { transaction_data: "..." } → AI JSON analysis or fallback
+POST /chat { message: "..." } → AI reply or fallback
+
+Copy backend/.env.example → backend/.env, add your OPENAI_API_KEY.
+
+Task complete!
+

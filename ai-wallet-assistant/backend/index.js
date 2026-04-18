@@ -14,19 +14,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/analyze", (req, res) => {
+app.post("/analyze", async (req, res) => {
     const { transaction_data } = req.body || {};
 
     if (!transaction_data) {
         return res.status(400).json({ error: "transaction_data is required" });
     }
 
-    // Risk detection keywords
+    // Risk detection keywords (Fallback/Safety check)
     const highRiskKeywords = [
         /approve.*unlimited/i,
         /transfer.*all/i,
         /setowner/i,
-        /selfdestruct/i
+        /selfdestruct/i,
+        /0xffffffffffffffffffffffffffffffff/i, // Max uint256
+        /0x[f]{64}/i // Also max uint256
     ];
     const mediumRiskKeywords = [
         /unknown contract/i,
@@ -35,26 +37,31 @@ app.post("/analyze", (req, res) => {
     ];
 
     let riskLevel = "LOW";
+    let summary = "This transaction appears safe.";
     let risks = [];
-    let summary = "This transaction appears safe. Standard operation detected.";
 
-    // Check for risks
+    // Keyword detection
     if (highRiskKeywords.some(regex => regex.test(transaction_data))) {
         riskLevel = "HIGH";
-        risks.push("Unlimited approvals, full balance transfers, or destructive calls detected.");
-        summary = "HIGH RISK: Potentially malicious transaction!";
+        risks.push("Unlimited approvals or full transfers detected via keyword analysis.");
+        summary = "HIGH RISK: Potentially malicious!";
     } else if (mediumRiskKeywords.some(regex => regex.test(transaction_data))) {
         riskLevel = "MEDIUM";
-        risks.push("Suspicious patterns or unknown contracts found.");
+        risks.push("Suspicious patterns found via keyword search.");
         summary = "MEDIUM RISK: Proceed with caution.";
     }
 
-async function analyzeWithAI(txData) {
+    async function analyzeWithAI(txData) {
         if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
             return {
                 summary: summary,
                 risk_level: riskLevel,
-                explanation: "OpenAI not configured. Set OPENAI_API_KEY in .env. Using keyword analysis only."
+                risk_score: riskLevel === "HIGH" ? 90 : (riskLevel === "MEDIUM" ? 50 : 10),
+                risk_factors: risks,
+                explanation: {
+                    simple: (risks.join(" ") || "No specific risks identified by local scans."),
+                    technical: "OpenAI not configured. Fallback keyword analysis used."
+                }
             };
         }
 
@@ -64,48 +71,71 @@ async function analyzeWithAI(txData) {
                 messages: [
                     {
                         role: "system",
-                        content: `You are a crypto security expert.
-Explain the given blockchain transaction in simple terms for a beginner.
+                        content: `You are a Hardened Security Auditor specializing in blockchain transactions. Your primary mission is to identify malicious activity and protect users from losing funds.
 
-Also:
-- Identify if it is risky or safe
-- Detect scams like unlimited approvals, phishing, draining wallets
-- Return ONLY valid JSON: {
-  "summary": "1 line simple explanation",
-  "risk_level": "LOW" | "MEDIUM" | "HIGH", 
-  "explanation": "clear reasoning"
-}`
+Analyze the raw transaction data provided. Look for red flags such as:
+1. 'Infinite Approvals': Giving a contract unlimited permission to spend a user's tokens (max uint256).
+2. 'High Slippage': Swap parameters where the user could receive significantly less value than expected.
+3. 'Phishing Contracts/Drainers': Known signatures for 'permit', 'setApprovalForAll' to unknown addresses, or interactions with malicious contracts.
+4. 'Honeypots': Contracts that allow deposits but prevent withdrawals.
+
+### RISK SCORING ATTACK VECTORS:
+- Infinite Approval to unknown/unverified contract: 80-100 points
+- Clear "Drainer" pattern (e.g., permit on all assets): 100 points
+- Slippage > 10% or suspicious swap math: 50-80 points
+- Interaction with blacklisted or unverified contract: 40-70 points
+- Standard interaction with verified protocol: 0-20 points
+
+### OUTPUT FORMAT:
+You must return your analysis in this exact JSON structure:
+{
+  "summary": "One-line clear summary of the transaction's purpose.",
+  "risk_level": "LOW | MEDIUM | HIGH | CRITICAL",
+  "risk_score": 0-100,
+  "risk_factors": ["List specific factors like 'Infinite Approval detected'", "..."],
+  "explanation": {
+    "simple": "Simple for Beginners: Explain what is happening like I am five, focusing on the danger.",
+    "technical": "Deep Technical Summary: Detailed breakdown of the function signatures, addresses, and logic found in the raw data."
+  }
+}
+
+Be paranoid. If you aren't 100% sure a transaction is safe, mark it as MEDIUM or HIGH risk.`
                     },
                     {
                         role: "user",
-                        content: `Transaction: ${txData}`
+                        content: `Analyze this raw transaction object:
+${txData}`
                     }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                response_format: { type: "json_object" }
             });
 
             const aiResponse = completion.choices[0].message.content;
-            // Parse JSON from response
-            const jsonMatch = aiResponse.match(/\{.*\}/s);
-            if (jsonMatch) {
-                const aiResult = JSON.parse(jsonMatch[0]);
-                return aiResult;
-            }
-            return {
-                summary: summary,
-                risk_level: riskLevel, 
-                explanation: aiResponse || "AI analysis failed to parse."
-            };
+            return JSON.parse(aiResponse);
         } catch (error) {
             console.error('OpenAI error:', error);
-            return {
-                summary: summary,
-                risk_level: riskLevel,
-                explanation: "AI service temporarily unavailable. Using keyword analysis."
-            };
+            return null;
         }
     }
 
+    const aiAnalysis = await analyzeWithAI(transaction_data);
+    
+    if (aiAnalysis) {
+        res.json(aiAnalysis);
+    } else {
+        // Ultimate fallback
+        res.json({
+            summary: summary,
+            risk_level: riskLevel,
+            risk_score: riskLevel === "HIGH" ? 95 : (riskLevel === "MEDIUM" ? 60 : 15),
+            risk_factors: risks,
+            explanation: {
+                simple: "We couldn't perform a deep analysis. " + (risks.length > 0 ? "Potential risks: " + risks.join(" ") : "Please review manually."),
+                technical: "AI analysis failed or returned invalid data. Falling back to keyword-based detection."
+            }
+        });
+    }
     console.log('POST /analyze received:', transaction_data.substring(0, 50) + '...');
     
     // Keyword analysis first
@@ -133,19 +163,17 @@ Also:
 
 
 app.post("/chat", async (req, res) => {
-    const { question, transaction_data } = req.body;
+    const { message, transaction_data } = req.body;
 
-    if (!question) {
-        return res.status(400).json({ error: "question is required" });
+    if (!message) {
+        return res.status(400).json({ error: "message is required" });
     }
 
     const context = transaction_data ? `Context transaction: ${transaction_data}\n` : '';
-    const fullPrompt = `${context}Question: ${question}`;
+    const fullPrompt = `${context}Question: ${message}`;
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
-        return res.json({
-            answer: "Chat requires OpenAI API key in .env. Question noted for demo."
-        });
+        return res.json({ reply: "Chat requires OpenAI API key in .env. Message noted for demo." });
     }
 
     try {
@@ -163,8 +191,8 @@ app.post("/chat", async (req, res) => {
             ]
         });
 
-        const answer = completion.choices[0].message.content;
-        res.json({ answer });
+        const reply = completion.choices[0].message.content;
+        res.json({ reply });
     } catch (error) {
         console.error('Chat OpenAI error:', error);
         res.status(500).json({ error: "Chat analysis failed" });
@@ -172,3 +200,4 @@ app.post("/chat", async (req, res) => {
 });
 
 app.listen(5000, () => console.log("AI Wallet Assistant Backend running on port 5000"));
+
