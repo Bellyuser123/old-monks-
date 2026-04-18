@@ -6,8 +6,8 @@ const OpenAI = require("openai");
 dotenv.config();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://integrate.api.nvidia.com/v1"
+  baseURL: process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",
+  apiKey: process.env.NVIDIA_API_KEY,
 });
 
 const app = express();
@@ -52,7 +52,7 @@ app.post("/analyze", async (req, res) => {
     }
 
     async function analyzeWithAI(txData) {
-        if (!process.env.OPENAI_API_KEY) {
+        if (!process.env.NVIDIA_API_KEY || process.env.NVIDIA_API_KEY === 'nvapi-your-key-here') {
             return {
                 summary: summary,
                 risk_level: riskLevel,
@@ -71,35 +71,26 @@ app.post("/analyze", async (req, res) => {
                 messages: [
                     {
                         role: "system",
-                        content: "You are a crypto security expert. Analyze transactions and return structured JSON: {summary, risk_level (LOW/MEDIUM/HIGH), risk_score (0-100), risk_factors (array), explanation (simple + technical)}."
+                        content: "You are a crypto security expert. Analyze transactions and return structured JSON: {summary, risk_level (LOW/MEDIUM/HIGH/CRITICAL), risk_score (0-100), risk_factors (array), explanation {simple, technical}}."
                     },
                     {
                         role: "user",
                         content: `Analyze: ${txData}`
                     }
                 ],
-                temperature: 0.1,
-                response_format: { type: "json_object" }
+                temperature: 0.2,
+                top_p: 0.7,
+                max_tokens: 1024
             });
 
             return JSON.parse(completion.choices[0].message.content);
         } catch (error) {
-            console.error('AI error:', error);
-            return {
-                summary: summary,
-                risk_level: riskLevel,
-                risk_score: riskLevel === "HIGH" ? 90 : riskLevel === "MEDIUM" ? 50 : 10,
-                risk_factors: risks,
-                explanation: {
-                    simple: "AI unavailable, keyword fallback used.",
-                    technical: error.message
-                }
-            };
+            console.error('NVIDIA API error:', error);
+            return null;
         }
     }
 
     const aiAnalysis = await analyzeWithAI(transaction_data);
-    res.json(aiAnalysis);
     
     if (aiAnalysis) {
         res.json(aiAnalysis);
@@ -128,8 +119,8 @@ app.post("/chat", async (req, res) => {
     const context = transaction_data ? `Transaction context: ${transaction_data}` : '';
     const fullPrompt = `${context} Q: ${message}`;
 
-    if (!process.env.OPENAI_API_KEY) {
-        return res.json({ reply: "API key required in .env" });
+    if (!process.env.NVIDIA_API_KEY || process.env.NVIDIA_API_KEY === 'nvapi-your-key-here') {
+        return res.json({ reply: "Chat requires NVIDIA API key in .env. Message noted for demo." });
     }
 
     try {
@@ -144,16 +135,18 @@ app.post("/chat", async (req, res) => {
                     role: "user",
                     content: fullPrompt
                 }
-            ]
+            ],
+            temperature: 0.2,
+            top_p: 0.7,
+            max_tokens: 1024
         });
 
         const reply = completion.choices[0].message.content;
         res.json({ reply });
     } catch (error) {
-        console.error('Chat error:', error);
-        res.status(500).json({ reply: "AI unavailable - " + error.message });
+        console.error('Chat NVIDIA API error:', error);
+        res.status(500).json({ error: "Chat analysis failed" });
     }
 });
 
 app.listen(5000, () => console.log("AI Wallet Backend on port 5000"));
-
