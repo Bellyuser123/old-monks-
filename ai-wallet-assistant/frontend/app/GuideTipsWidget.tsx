@@ -221,7 +221,7 @@ export default function GuideTipsWidget() {
             display: 'flex',
             flexDirection: 'column',
             fontFamily: '"Arial Black", sans-serif',
-            rotate: '-1deg'
+            rotate: '0deg'
           }}
         >
           {/* Header */}
@@ -276,7 +276,9 @@ export default function GuideTipsWidget() {
                 cursor: 'pointer',
                 fontSize: '1rem',
                 fontFamily: '"Arial Black", sans-serif',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                color: 'black',
+                textAlign: 'center'
               }}
             >
               📖 Guides
@@ -296,7 +298,9 @@ export default function GuideTipsWidget() {
                 cursor: 'pointer',
                 fontSize: '1rem',
                 fontFamily: '"Arial Black", sans-serif',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                color: 'black',
+                textAlign: 'center'
               }}
             >
               💡 Tips
