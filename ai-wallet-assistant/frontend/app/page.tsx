@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from 'react';
+import { saveAnalysis, createAnalysis } from '@/lib/history';
+import Link from 'next/link';
 
 interface AnalysisResult {
   summary: string;
@@ -15,6 +17,7 @@ interface ChatMessage {
 
 export default function Home() {
   const [transactionData, setTransactionData] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState('');
@@ -48,12 +51,29 @@ export default function Home() {
 
       const data: AnalysisResult = await response.json();
       setResult(data);
+
+      // Auto-save to history
+      const statusMap = {
+        LOW: 'Safe' as const,
+        MEDIUM: 'Warning' as const,
+        HIGH: 'Critical' as const,
+      };
+      const analysis = createAnalysis(
+        transactionData,
+        {
+          status: statusMap[data.risk_level as keyof typeof statusMap],
+          summary: data.summary,
+          details: data.explanation,
+        }
+      );
+      saveAnalysis(analysis);
     } catch (err: any) {
       setError(err.message || 'Analysis failed. Start backend: cd ai-wallet-assistant/backend && node index.js');
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleTryExample = () => {
     setTransactionData(RISKY_EXAMPLE);
@@ -86,7 +106,30 @@ export default function Home() {
 
       const data = await response.json();
       const aiMessage: ChatMessage = { type: 'ai', text: data.answer || 'No response' };
-      setChatMessages([...tempMessages, aiMessage]);
+      const newMessages = [...tempMessages, aiMessage];
+      setChatMessages(newMessages);
+
+      // Append to analysis chatHistory if result exists
+      if (result && transactionData) {
+        const statusMap = {
+          LOW: 'Safe' as const,
+          MEDIUM: 'Warning' as const,
+          HIGH: 'Critical' as const,
+        };
+        const analysis = createAnalysis(
+          transactionData,
+          {
+            status: statusMap[result.risk_level as keyof typeof statusMap],
+            summary: result.summary,
+            details: result.explanation,
+          },
+          newMessages.map(m => ({
+            role: m.type === 'user' ? 'user' : 'assistant',
+            message: m.text
+          }))
+        );
+        saveAnalysis(analysis);
+      }
     } catch (err: any) {
       const errorMessage: ChatMessage = { type: 'ai', text: `Error: ${err.message}. Backend must be running.` };
       setChatMessages([...tempMessages, errorMessage]);
@@ -94,6 +137,7 @@ export default function Home() {
       setChatLoading(false);
     }
   };
+
 
   const getRiskStyle = (risk: string) => {
     const styles = {
@@ -325,8 +369,23 @@ export default function Home() {
                 }}>
                   {result.explanation}
                 </p>
+                <Link href="/history" style={{
+                  display: 'inline-block',
+                  marginTop: '1.5rem',
+                  padding: '1rem 2rem',
+                  backgroundColor: '#4f46e5',
+                  color: 'white',
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  border: '3px solid black',
+                  boxShadow: '4px 4px 0 black',
+                  fontFamily: '"Arial Black", sans-serif'
+                }}>
+                  VIEW IN HISTORY →
+                </Link>
               </div>
             )}
+
           </div>
 
           {/* Chat Panel */}
