@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 @import "tailwindcss";
 
 :root {
@@ -15,4 +16,110 @@ body {
 /* Ensure neubrutalist shadows and borders are visible */
 * {
   border-color: black;
+=======
+/* Neo-Brutalism Base Styles for AI Wallet Assistant */
+
+:root {
+  --bg-primary: #f9fafb;
+  --card-bg: #ffffff;
+  --text-primary: #000000;
+  --border-primary: #000000;
+  --success: #00e676;
+  --warning: #ffd600;
+  --danger: #ff3b3b;
+  --shadow: 6px 6px 0 #000000;
+  --shadow-hover: 8px 8px 0 #000000;
+  --shadow-press: 2px 2px 0 #000000;
+  --border-thick: 4px solid #000000;
+  --font-bold: 'Arial Black', 'Impact', sans-serif;
+  --font-mono: 'Courier New', monospace;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #111827;
+    --card-bg: #1f2937;
+    --text-primary: #f9fafb;
+    --border-primary: #f9fafb;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* Brutalist Button Base */
+.brutalist-btn {
+  border: var(--border-thick);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  padding: 1rem 1.5rem;
+  font-family: var(--font-bold);
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.brutalist-btn:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px) translateX(-2px);
+}
+
+.brutalist-btn:active {
+  box-shadow: var(--shadow-press);
+  transform: translateY(2px) translateX(2px);
+}
+
+/* Brutalist Card Base */
+.brutalist-card {
+  border: var(--border-thick);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin-bottom: 20px;
+}
+
+.brutalist-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px) translateX(-2px);
+}
+
+/* Risk Badge Base */
+.risk-badge {
+  border: var(--border-thick);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-bold);
+  font-weight: 900;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  box-shadow: var(--shadow);
+  display: inline-block;
+}
+
+/* Hide Reown AppKit's auto-injected floating button */
+appkit-button,
+appkit-button::part(button),
+wui-button {
+  display: none !important;
+>>>>>>> Stashed changes
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+

@@ -15,6 +15,7 @@ const statusStyles: Record<Status, string> = {
 
 export default function StatusBadge({ status, className = "" }: StatusBadgeProps) {
   return (
+<<<<<<< Updated upstream
     <div 
       className={`
         px-4 py-2 border-2 border-black font-black text-sm uppercase tracking-widest
@@ -22,9 +23,27 @@ export default function StatusBadge({ status, className = "" }: StatusBadgeProps
         transition-all duration-100 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none
         ${statusStyles[status]} ${className}
       `}
+=======
+    <div
+      className={className}
+      style={{
+        padding: '0.5rem 1rem',
+        backgroundColor: style.bg,
+        color: style.text,
+        border: '3px solid black',
+        fontWeight: '900',
+        fontSize: '0.875rem',
+        textTransform: 'uppercase',
+        fontFamily: 'var(--font-bold)',
+        boxShadow: `6px 6px 0 ${style.shadow}`,
+        display: 'inline-block',
+        transition: 'all 0.15s'
+      }}
+>>>>>>> Stashed changes
     >
-      {status} RISK
+      {status === 'Safe' ? 'LOW' : status === 'Warning' ? 'MEDIUM' : 'HIGH'} RISK
     </div>
+
   );
 }
 

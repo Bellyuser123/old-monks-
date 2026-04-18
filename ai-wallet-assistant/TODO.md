@@ -1,19 +1,19 @@
-# Backend OpenAI Upgrade - COMPLETE ✅
+# Neo-Brutalism History Page Polish
+## Plan Progress
 
-All steps done:
-- [x] .env.example created
-- [x] /chat standardized to { message, transaction_data? } → { reply }
-- [x] gpt-4o-mini for both endpoints
-- [x] Fallbacks: keyword + no-key + error handling intact
+✅ **Step 1: Create TODO.md** - Tracking started  
+✅ **Step 2: Update globals.css** - Brutalist base classes added (btn/card/badge)
 
-## Test:
-cd ai-wallet-assistant/backend && npm start
+**Pending Steps:**
+- [ ] Step 6: Test locally (`cd ai-wallet-assistant/frontend && npm run dev`)
+- [ ] Step 7: Final verification & completion
 
-**Endpoints ready:**
-POST /analyze { transaction_data: "..." } → AI JSON analysis or fallback
-POST /chat { message: "..." } → AI reply or fallback
+✅ **Step 5: Update StatusBadge.tsx** - LOW/MED/HIGH + vars/shadow
 
-Copy backend/.env.example → backend/.env, add your OPENAI_API_KEY.
+**Details:** All styling polished - bold Neo-Brutalism, clean hierarchy, perfect spacing/interactions.
 
-Task complete!
+
+
+**Details:** Enhancing spacing, interactions, typography consistency per Neo-Brutalism spec. No layout/data changes.
+
 
