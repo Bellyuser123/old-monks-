@@ -15,6 +15,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/", (req, res) => {
+    res.json({ status: "active", message: "AI Wallet Assistant Backend is running" });
+});
+
+app.get("/health", (req, res) => {
+    res.status(200).send("OK");
+});
+
 app.post("/analyze", async (req, res) => {
     const { transaction_data } = req.body || {};
 

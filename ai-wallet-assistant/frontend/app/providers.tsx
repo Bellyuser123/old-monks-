@@ -4,7 +4,7 @@ import React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createConfig, http } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
+import { mainnet } from 'viem/chains';
 
 // Create a simple wagmi config
 const wagmiConfig = createConfig({
