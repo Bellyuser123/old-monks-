@@ -7,6 +7,7 @@ dotenv.config();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://integrate.api.nvidia.com/v1",
 });
 
 const app = express();
@@ -67,7 +68,7 @@ app.post("/analyze", async (req, res) => {
 
         try {
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: "meta/llama-3.3-70b-instruct",
                 messages: [
                     {
                         role: "system",
@@ -154,7 +155,7 @@ app.post("/chat", async (req, res) => {
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "meta/llama-3.3-70b-instruct",
             messages: [
                 {
                     role: "system",
