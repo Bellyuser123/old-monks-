@@ -7,7 +7,8 @@ const analyzeWithAI = require('./analyzeWithAI');
 dotenv.config();
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",
+  apiKey: process.env.OPENAI_API_KEY || process.env.NVIDIA_API_KEY || "dummy_key_to_allow_initialization",
 });
 
 const app = express();
@@ -22,12 +23,14 @@ app.post("/analyze", async (req, res) => {
         return res.status(400).json({ error: "transaction_data is required" });
     }
 
-    // Risk detection keywords
+    // Risk detection keywords (Fallback/Safety check)
     const highRiskKeywords = [
         /approve.*unlimited/i,
         /transfer.*all/i,
         /setowner/i,
-        /selfdestruct/i
+        /selfdestruct/i,
+        /0xffffffffffffffffffffffffffffffff/i,
+        /0x[f]{64}/i
     ];
     const mediumRiskKeywords = [
         /unknown contract/i,
@@ -36,17 +39,16 @@ app.post("/analyze", async (req, res) => {
     ];
 
     let riskLevel = "LOW";
+    let summary = "This transaction appears safe.";
     let risks = [];
-    let summary = "This transaction appears safe. Standard operation detected.";
 
-    // Check for risks
     if (highRiskKeywords.some(regex => regex.test(transaction_data))) {
         riskLevel = "HIGH";
-        risks.push("Unlimited approvals, full balance transfers, or destructive calls detected.");
-        summary = "HIGH RISK: Potentially malicious transaction!";
+        risks.push("Unlimited approvals or full transfers detected.");
+        summary = "HIGH RISK: Potentially malicious!";
     } else if (mediumRiskKeywords.some(regex => regex.test(transaction_data))) {
         riskLevel = "MEDIUM";
-        risks.push("Suspicious patterns or unknown contracts found.");
+        risks.push("Suspicious patterns found.");
         summary = "MEDIUM RISK: Proceed with caution.";
     }
 
@@ -67,42 +69,48 @@ app.post("/analyze", async (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
-    const { question, transaction_data } = req.body;
+    const { message, transaction_data } = req.body;
 
-    if (!question) {
-        return res.status(400).json({ error: "question is required" });
+    if (!message) {
+        return res.status(400).json({ error: "message is required" });
     }
 
+<<<<<<< HEAD
     const context = transaction_data ? `Context transaction: ${transaction_data}\\n` : '';
     const fullPrompt = `${context}Question: ${question}`;
+=======
+    const context = transaction_data ? `Transaction context: ${transaction_data}` : '';
+    const fullPrompt = `${context} Q: ${message}`;
+>>>>>>> 8c02ef48f325ea3b08178f8e8c515fc25bb8ca7b
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
-        return res.json({
-            answer: "Chat requires OpenAI API key in .env. Question noted for demo."
-        });
+    if (!process.env.NVIDIA_API_KEY || process.env.NVIDIA_API_KEY === 'nvapi-your-key-here') {
+        return res.json({ reply: "Chat requires NVIDIA API key in .env. Message noted for demo." });
     }
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "meta/llama-3.3-70b-instruct",
             messages: [
                 {
                     role: "system",
-                    content: "You are an expert crypto wallet assistant. Answer questions about blockchain transactions clearly and help users avoid scams. Be concise but thorough."
+                    content: "You are a crypto wallet assistant. Answer clearly about transactions and security."
                 },
                 {
                     role: "user",
                     content: fullPrompt
                 }
-            ]
+            ],
+            temperature: 0.2,
+            top_p: 0.7,
+            max_tokens: 1024
         });
 
-        const answer = completion.choices[0].message.content;
-        res.json({ answer });
+        const reply = completion.choices[0].message.content;
+        res.json({ reply });
     } catch (error) {
-        console.error('Chat OpenAI error:', error);
+        console.error('Chat NVIDIA API error:', error);
         res.status(500).json({ error: "Chat analysis failed" });
     }
 });
 
-app.listen(5000, () => console.log("AI Wallet Assistant Backend running on port 5000"));
+app.listen(5000, () => console.log("AI Wallet Backend on port 5000"));

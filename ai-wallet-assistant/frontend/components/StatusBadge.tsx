@@ -17,9 +17,9 @@ export default function StatusBadge({ status, className = "" }: StatusBadgeProps
   return (
     <div 
       className={`
-        px-6 py-3 border-4 border-black font-black text-lg uppercase tracking-wide
+        px-4 py-2 border-2 border-black font-black text-sm uppercase tracking-widest
         inline-block shadow-[6px_6px_0_black] hover:shadow-[3px_3px_0_black] hover:translate-x-[3px] hover:translate-y-[3px]
-        transition-all duration-150 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none
+        transition-all duration-100 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none
         ${statusStyles[status]} ${className}
       `}
     >

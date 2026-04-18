@@ -6,8 +6,13 @@ import Link from 'next/link';
 
 interface AnalysisResult {
   summary: string;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
-  explanation: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  risk_score?: number;
+  risk_factors?: string[];
+  explanation: {
+    simple: string;
+    technical: string;
+  };
 }
 
 interface ChatMessage {
@@ -63,7 +68,9 @@ export default function Home() {
         {
           status: statusMap[data.risk_level as keyof typeof statusMap],
           summary: data.summary,
-          details: data.explanation,
+          details: typeof data.explanation === 'object'
+            ? `${data.explanation.simple}\n\n${data.explanation.technical}`
+            : data.explanation,
         }
       );
       saveAnalysis(analysis);
@@ -95,7 +102,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          question: chatInput,
+          message: chatInput,
           transaction_data: result ? transactionData : undefined 
         }),
       });
@@ -105,7 +112,7 @@ export default function Home() {
       }
 
       const data = await response.json();
-      const aiMessage: ChatMessage = { type: 'ai', text: data.answer || 'No response' };
+      const aiMessage: ChatMessage = { type: 'ai', text: data.reply || 'No response' };
       const newMessages = [...tempMessages, aiMessage];
       setChatMessages(newMessages);
 
@@ -121,7 +128,7 @@ export default function Home() {
           {
             status: statusMap[result.risk_level as keyof typeof statusMap],
             summary: result.summary,
-            details: result.explanation,
+            details: result.explanation.simple || JSON.stringify(result.explanation),
           },
           newMessages.map(m => ({
             role: m.type === 'user' ? 'user' : 'assistant',
@@ -274,7 +281,201 @@ export default function Home() {
             </button>
           </form>
 
+<<<<<<< HEAD
           {error && (
+=======
+            <form onSubmit={handleAnalyze} style={{ marginBottom: '2rem' }}>
+              <textarea
+                value={transactionData}
+                onChange={(e) => setTransactionData(e.target.value)}
+                placeholder="PASTE YOUR TRANSACTION DATA HERE..."
+                style={{
+                  width: '100%',
+                  height: '160px',
+                  padding: '1.5rem',
+                  border: '4px solid black',
+                  backgroundColor: '#fafafa',
+                  fontFamily: 'monospace',
+                  fontSize: '1rem',
+                  lineHeight: 1.5,
+                  resize: 'vertical',
+                  boxShadow: 'inset 4px 4px 0 #ddd',
+                  fontWeight: '500'
+                }}
+                disabled={loading}
+              />
+              <button
+                type="submit"
+                disabled={loading || !transactionData.trim()}
+                style={{
+                  width: '100%',
+                  padding: '1.5rem 2rem',
+                  backgroundColor: '#ff0000',
+                  color: 'white',
+                  border: '4px solid black',
+                  fontSize: '1.3rem',
+                  fontWeight: 'bold',
+                  fontFamily: '"Arial Black", sans-serif',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: '6px 6px 0 black',
+                  marginTop: '1.5rem',
+                  textTransform: 'uppercase',
+                  transition: 'all 0.1s'
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'translate(4px, 4px)';
+                  e.currentTarget.style.boxShadow = '2px 2px 0 black';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '6px 6px 0 black';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '6px 6px 0 black';
+                }}
+              >
+                {loading ? 'AI THINKING...' : 'RIP & TEAR ANALYZE'}
+              </button>
+            </form>
+
+            {error && (
+              <div style={{
+                padding: '1.5rem',
+                border: '4px solid #ff4444',
+                backgroundColor: '#ffeeee',
+                marginTop: '1rem',
+                fontWeight: 'bold',
+                color: 'black'
+              }}>
+                ERROR: {error}
+              </div>
+            )}
+
+            {result && (
+              <div style={{
+                border: '4px solid black',
+                backgroundColor: '#fff',
+                boxShadow: '6px 6px 0 black',
+                padding: '2rem',
+                marginTop: '2rem',
+                rotate: '-0.5deg'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '1.5rem', 
+                  alignItems: 'flex-start',
+                  marginBottom: '1.5rem' 
+                }}>
+                  <div style={{
+                    padding: '1rem 2rem',
+                    minWidth: '140px',
+                    textAlign: 'center',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    border: '3px solid black',
+                    textTransform: 'uppercase',
+                    boxShadow: '4px 4px 0 black',
+                    ...getRiskStyle(result.risk_level)
+                  }}>
+                    {result.risk_level} RISK
+                  </div>
+                  <h3 style={{
+                    fontSize: '2rem',
+                    fontWeight: '900',
+                    color: 'black',
+                    margin: 0,
+                    lineHeight: 1.2,
+                    flex: 1,
+                    fontFamily: '"Arial Black", sans-serif'
+                  }}>
+                    {result.summary}
+                  </h3>
+                </div>
+                {result.risk_score !== undefined && (
+                  <div style={{
+                    padding: '0.5rem 1rem',
+                    border: '2px solid black',
+                    backgroundColor: '#f5f5f5',
+                    color: 'black',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem',
+                    fontFamily: 'monospace'
+                  }}>
+                    RISK SCORE: {result.risk_score}/100
+                  </div>
+                )}
+                {result.risk_factors && result.risk_factors.length > 0 && (
+                  <ul style={{
+                    margin: '0 0 1rem 0',
+                    paddingLeft: '1.5rem',
+                    fontFamily: 'monospace',
+                    fontWeight: '500',
+                    color: 'black'
+                  }}>
+                    {result.risk_factors.map((factor, i) => (
+                      <li key={i} style={{ marginBottom: '0.3rem', color: 'black' }}>{factor}</li>
+                    ))}
+                  </ul>
+                )}
+                <p style={{
+                  fontSize: '1rem',
+                  color: 'black',
+                  lineHeight: 1.6,
+                  margin: '0 0 0.75rem 0',
+                  fontFamily: 'monospace',
+                  fontWeight: '500'
+                }}>
+                  <strong>Simple:</strong> {result.explanation?.simple}
+                </p>
+                <p style={{
+                  fontSize: '0.9rem',
+                  color: '#444',
+                  lineHeight: 1.6,
+                  margin: 0,
+                  fontFamily: 'monospace'
+                }}>
+                  <strong>Technical:</strong> {result.explanation?.technical}
+                </p>
+                <Link href="/history" style={{
+                  display: 'inline-block',
+                  marginTop: '1.5rem',
+                  padding: '1rem 2rem',
+                  backgroundColor: '#4f46e5',
+                  color: 'white',
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  border: '3px solid black',
+                  boxShadow: '4px 4px 0 black',
+                  fontFamily: '"Arial Black", sans-serif'
+                }}>
+                  VIEW IN HISTORY →
+                </Link>
+              </div>
+            )}
+
+          </div>
+
+          {/* Chat Panel */}
+          <div style={{
+            border: '4px solid black',
+            backgroundColor: '#fff',
+            boxShadow: '-8px 8px 0 black',
+            rotate: '-0.5deg',
+            padding: '2rem'
+          }}>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '900',
+              color: 'black',
+              margin: '0 0 2rem 0',
+              borderBottom: '3px solid black',
+              paddingBottom: '0.5rem',
+              fontFamily: '"Arial Black", sans-serif'
+            }}>
+              AI CHAT TERMINAL
+            </h2>
+>>>>>>> 8c02ef48f325ea3b08178f8e8c515fc25bb8ca7b
             <div style={{
               padding: '20px',
               border: '1px solid #f87171',
