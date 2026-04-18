@@ -136,7 +136,31 @@ ${txData}`
             }
         });
     }
+    console.log('POST /analyze received:', transaction_data.substring(0, 50) + '...');
+    
+    // Keyword analysis first
+    let keywordRisk = riskLevel;
+    let keywordSummary = summary;
+    
+    // Async AI analysis (no double response)
+    analyzeWithAI(transaction_data).then(aiAnalysis => {
+        console.log('AI analysis complete:', aiAnalysis.risk_level);
+        res.json({
+            summary: aiAnalysis.summary || keywordSummary,
+            risk_level: aiAnalysis.risk_level || keywordRisk,
+            explanation: aiAnalysis.explanation
+        });
+    }).catch(err => {
+        res.status(500).json({ error: "Analysis failed" });
+        console.error('AI analysis error:', err);
+        res.json({
+            summary: keywordSummary,
+            risk_level: keywordRisk,
+            explanation: risks.join(" ") || "Keyword analysis complete. AI temporarily unavailable."
+        });
+    });
 });
+
 
 app.post("/chat", async (req, res) => {
     const { message, transaction_data } = req.body;
