@@ -6,8 +6,13 @@ import Link from 'next/link';
 
 interface AnalysisResult {
   summary: string;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
-  explanation: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  risk_score?: number;
+  risk_factors?: string[];
+  explanation: {
+    simple: string;
+    technical: string;
+  };
 }
 
 interface ChatMessage {
@@ -63,7 +68,9 @@ export default function Home() {
         {
           status: statusMap[data.risk_level as keyof typeof statusMap],
           summary: data.summary,
-          details: data.explanation,
+          details: typeof data.explanation === 'object'
+            ? `${data.explanation.simple}\n\n${data.explanation.technical}`
+            : data.explanation,
         }
       );
       saveAnalysis(analysis);
@@ -359,15 +366,48 @@ export default function Home() {
                     {result.summary}
                   </h3>
                 </div>
+                {result.risk_score !== undefined && (
+                  <div style={{
+                    padding: '0.5rem 1rem',
+                    border: '2px solid black',
+                    backgroundColor: '#f5f5f5',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem',
+                    fontFamily: 'monospace'
+                  }}>
+                    RISK SCORE: {result.risk_score}/100
+                  </div>
+                )}
+                {result.risk_factors && result.risk_factors.length > 0 && (
+                  <ul style={{
+                    margin: '0 0 1rem 0',
+                    paddingLeft: '1.5rem',
+                    fontFamily: 'monospace',
+                    fontWeight: '500'
+                  }}>
+                    {result.risk_factors.map((factor, i) => (
+                      <li key={i} style={{ marginBottom: '0.3rem' }}>{factor}</li>
+                    ))}
+                  </ul>
+                )}
                 <p style={{
-                  fontSize: '1.1rem',
+                  fontSize: '1rem',
                   color: 'black',
                   lineHeight: 1.6,
-                  margin: 0,
+                  margin: '0 0 0.75rem 0',
                   fontFamily: 'monospace',
                   fontWeight: '500'
                 }}>
-                  {result.explanation}
+                  <strong>Simple:</strong> {result.explanation?.simple}
+                </p>
+                <p style={{
+                  fontSize: '0.9rem',
+                  color: '#444',
+                  lineHeight: 1.6,
+                  margin: 0,
+                  fontFamily: 'monospace'
+                }}>
+                  <strong>Technical:</strong> {result.explanation?.technical}
                 </p>
                 <Link href="/history" style={{
                   display: 'inline-block',
