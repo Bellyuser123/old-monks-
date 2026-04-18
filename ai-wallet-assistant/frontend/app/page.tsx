@@ -128,7 +128,7 @@ export default function Home() {
           {
             status: statusMap[result.risk_level as keyof typeof statusMap],
             summary: result.summary,
-            details: result.explanation,
+            details: result.explanation.simple || JSON.stringify(result.explanation),
           },
           newMessages.map(m => ({
             role: m.type === 'user' ? 'user' : 'assistant',
