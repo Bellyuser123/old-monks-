@@ -3,6 +3,7 @@
 import HistoryTable from '@/components/HistoryTable';
 import { getAllAnalyses, clearHistory, type Analysis } from '@/lib/history';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function HistoryPage() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
@@ -36,23 +37,29 @@ export default function HistoryPage() {
   }
 
   return (
-    <main className="min-h-screen py-12 px-6 md:px-12 lg:px-24 bg-gradient-to-br from-gray-50 to-white">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-6xl md:text-7xl font-black uppercase tracking-widest mb-6 bg-gradient-to-r from-black to-gray-800 bg-clip-text text-transparent rotate-[-1deg] shadow-[0_4px_0_black]">
+    <main className="min-h-screen py-8 px-4 md:px-8 lg:px-16 bg-[#f5f5f5] font-black">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-8 border-4 border-black bg-white p-6 shadow-[12px_12px_0_black] rotate-[-0.5deg]">
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-4 bg-black text-white p-2 inline-block">
             ANALYSIS HISTORY
           </h1>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
             <button
               onClick={handleClear}
-              className="px-8 py-4 bg-red-500 text-white border-4 border-red-700 font-black text-xl uppercase tracking-wide shadow-[8px_8px_0_#b91c1c] hover:shadow-[4px_4px_0_#b91c1c] hover:translate-x-[4px] hover:translate-y-[4px] transition-all duration-200"
+              className="px-6 py-3 bg-red-500 text-white border-4 border-black font-black text-lg uppercase tracking-wider shadow-[6px_6px_0_black] hover:shadow-[3px_3px_0_black] hover:translate-x-[3px] hover:translate-y-[3px] transition-all duration-100 active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
             >
-              Clear All History
+              PURGE DATA
             </button>
+            <Link
+              href="/"
+              className="px-6 py-3 bg-[#ffd700] text-black border-4 border-black font-black text-lg uppercase tracking-wider shadow-[6px_6px_0_black] hover:shadow-[3px_3px_0_black] hover:translate-x-[3px] hover:translate-y-[3px] transition-all duration-100"
+            >
+              ← BACK
+            </Link>
           </div>
         </div>
         
-        <div className="bg-white/80 backdrop-blur-sm">
+        <div className="bg-white border-4 border-black shadow-[16px_16px_0_black]">
           <HistoryTable analyses={analyses} />
         </div>
       </div>

@@ -371,6 +371,7 @@ export default function Home() {
                     padding: '0.5rem 1rem',
                     border: '2px solid black',
                     backgroundColor: '#f5f5f5',
+                    color: 'black',
                     fontWeight: 'bold',
                     marginBottom: '1rem',
                     fontFamily: 'monospace'
@@ -383,10 +384,11 @@ export default function Home() {
                     margin: '0 0 1rem 0',
                     paddingLeft: '1.5rem',
                     fontFamily: 'monospace',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    color: 'black'
                   }}>
                     {result.risk_factors.map((factor, i) => (
-                      <li key={i} style={{ marginBottom: '0.3rem' }}>{factor}</li>
+                      <li key={i} style={{ marginBottom: '0.3rem', color: 'black' }}>{factor}</li>
                     ))}
                   </ul>
                 )}

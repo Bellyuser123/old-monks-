@@ -47,42 +47,47 @@ export default function HistoryTable({ analyses }: HistoryTableProps) {
 
   return (
     <div className="w-full">
-      <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center">
-        <input
-          type="text"
-          placeholder="Search analyses..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-6 py-4 border-4 border-black bg-gray-50 font-mono text-lg shadow-[6px_6px_0_black] focus:outline-none focus:border-gray-800"
-        />
-        <span className="text-sm font-mono text-gray-500">
-          {filteredAnalyses.length} of {analyses.length} results
-        </span>
+      <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center px-4 pt-6">
+        <div className="relative flex-1 w-full group">
+          <input
+            type="text"
+            placeholder="FILTER BY DATA OR RESULT..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-6 py-4 border-4 border-black bg-white font-black text-lg uppercase tracking-wider shadow-[8px_8px_0_#ffd700] focus:outline-none focus:shadow-[4px_4px_0_#ffd700] focus:translate-x-[4px] focus:translate-y-[4px] transition-all placeholder-gray-400"
+          />
+          <div className="absolute top-0 right-0 h-full flex items-center pr-6 pointer-events-none">
+            <span className="text-lg font-black text-black">🔍</span>
+          </div>
+        </div>
+        <div className="bg-black text-white px-4 py-2 border-2 border-black font-black uppercase text-xs shadow-[4px_4px_0_#ffd700] rotate-1">
+          {filteredAnalyses.length} / {analyses.length} LOGS
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-8 border-black bg-white shadow-[16px_16px_0_black] rotate-1">
+      <div className="overflow-x-auto pb-8">
+        <table className="w-full border-4 border-black bg-white shadow-[12px_12px_0_black] border-collapse">
           <thead>
-            <tr className="bg-gray-900 text-white">
-              <th className="p-6 text-left font-black uppercase tracking-wider text-xl border-r-4 border-white">Date</th>
-              <th className="p-6 text-left font-black uppercase tracking-wider text-xl border-r-4 border-white">Input</th>
-              <th className="p-6 text-center font-black uppercase tracking-wider text-xl">Status</th>
+            <tr className="bg-black text-white border-b-4 border-black text-sm">
+              <th className="p-4 text-left font-black uppercase tracking-widest border-r-4 border-black">DATE_STAMP</th>
+              <th className="p-4 text-left font-black uppercase tracking-widest border-r-4 border-black">INPUT_PAYLOAD</th>
+              <th className="p-4 text-center font-black uppercase tracking-widest">RISK_HEX</th>
             </tr>
           </thead>
           <tbody>
             {filteredAnalyses.map((analysis) => (
               <tr 
                 key={analysis.id}
-                className="hover:bg-gray-50 border-t-4 border-black cursor-pointer transition-all hover:shadow-[4px_4px_0_black]"
+                className="group hover:bg-[#fff9c4] border-b-4 border-black cursor-pointer transition-all active:bg-[#fff176]"
                 onClick={() => router.push(`/history/${analysis.id}`)}
               >
-                <td className="p-6 font-mono text-lg border-r-4 border-black">
+                <td className="p-4 font-black font-mono text-sm border-r-4 border-black group-hover:bg-black group-hover:text-white transition-colors">
                   {formatDate(analysis.timestamp)}
                 </td>
-                <td className="p-6 font-mono text-lg max-w-md truncate" title={analysis.inputText}>
-                  {truncate(analysis.inputText, 80)}
+                <td className="p-4 font-black font-mono text-sm border-r-4 border-black">
+                  {truncate(analysis.inputText, 60)}
                 </td>
-                <td className="p-6 text-center">
+                <td className="p-4 text-center group-hover:scale-105 transition-transform">
                   <StatusBadge status={analysis.result.status} />
                 </td>
               </tr>
