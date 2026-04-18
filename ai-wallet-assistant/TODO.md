@@ -9,5 +9,6 @@
 
 ### 2. Backend Logic Upgrades (index.js)
 - [x] Require dotenv, OpenAI client
-- [x] Implement real analyzeWithAI() with OpenAI chat.completions + structured prompt
-- [x] Parse AI response to {summary, risk_level, explanation}
+- [x] Implement robust analyzeWithAI() with GPT-4-Turbo + "Hardened Auditor" persona
+- [x] Parse AI response to {summary, risk_level, risk_score, risk_factors, explanation}
+- [x] Robust fallback for keyword detection and structured output

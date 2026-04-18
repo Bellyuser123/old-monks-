@@ -26,7 +26,9 @@ app.post("/analyze", async (req, res) => {
         /approve.*unlimited/i,
         /transfer.*all/i,
         /setowner/i,
-        /selfdestruct/i
+        /selfdestruct/i,
+        /0xffffffffffffffffffffffffffffffff/i, // Max uint256
+        /0x[f]{64}/i // Also max uint256
     ];
     const mediumRiskKeywords = [
         /unknown contract/i,
@@ -54,50 +56,55 @@ app.post("/analyze", async (req, res) => {
             return {
                 summary: summary,
                 risk_level: riskLevel,
-                explanation: (risks.join(" ") || "No specific risks identified by keywords.") + " (OpenAI not configured, fallback used)"
+                risk_score: riskLevel === "HIGH" ? 90 : (riskLevel === "MEDIUM" ? 50 : 10),
+                risk_factors: risks,
+                explanation: {
+                    simple: (risks.join(" ") || "No specific risks identified by local scans."),
+                    technical: "OpenAI not configured. Fallback keyword analysis used."
+                }
             };
         }
 
         try {
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: "gpt-4-turbo",
                 messages: [
                     {
                         role: "system",
-                        content: `You are a crypto security expert and wallet assistant.
+                        content: `You are a Hardened Security Auditor specializing in blockchain transactions. Your primary mission is to identify malicious activity and protect users from losing funds.
 
-Your job is to explain blockchain transactions in simple, beginner-friendly language and detect potential risks.
+Analyze the raw transaction data provided. Look for red flags such as:
+1. 'Infinite Approvals': Giving a contract unlimited permission to spend a user's tokens (max uint256).
+2. 'High Slippage': Swap parameters where the user could receive significantly less value than expected.
+3. 'Phishing Contracts/Drainers': Known signatures for 'permit', 'setApprovalForAll' to unknown addresses, or interactions with malicious contracts.
+4. 'Honeypots': Contracts that allow deposits but prevent withdrawals.
 
-IMPORTANT RULES:
-- Use very simple English (assume user is new to crypto)
-- Avoid technical jargon OR explain it clearly
-- Be concise but informative
-- Always warn clearly if something is risky
-- Never assume the transaction is safe
+### RISK SCORING ATTACK VECTORS:
+- Infinite Approval to unknown/unverified contract: 80-100 points
+- Clear "Drainer" pattern (e.g., permit on all assets): 100 points
+- Slippage > 10% or suspicious swap math: 50-80 points
+- Interaction with blacklisted or unverified contract: 40-70 points
+- Standard interaction with verified protocol: 0-20 points
 
-You must return output in this exact JSON format:
+### OUTPUT FORMAT:
+You must return your analysis in this exact JSON structure:
 {
-  "summary": "1 line simple explanation",
-  "risk_level": "LOW | MEDIUM | HIGH",
-  "explanation": "Clear explanation of what is happening and why it may be risky"
+  "summary": "One-line clear summary of the transaction's purpose.",
+  "risk_level": "LOW | MEDIUM | HIGH | CRITICAL",
+  "risk_score": 0-100,
+  "risk_factors": ["List specific factors like 'Infinite Approval detected'", "..."],
+  "explanation": {
+    "simple": "Simple for Beginners: Explain what is happening like I am five, focusing on the danger.",
+    "technical": "Deep Technical Summary: Detailed breakdown of the function signatures, addresses, and logic found in the raw data."
+  }
 }
 
-Risk Detection Guidelines:
-- If transaction includes unlimited approval → HIGH
-- If contract is unknown/unverified → MEDIUM or HIGH
-- If user gives control of funds → HIGH
-- If simple transfer → LOW
-- If unsure → MEDIUM
-
-Focus on:
-1. What the user is doing
-2. What permissions they are giving
-3. What could go wrong`
+Be paranoid. If you aren't 100% sure a transaction is safe, mark it as MEDIUM or HIGH risk.`
                     },
                     {
                         role: "user",
-                        content: `Analyze the transaction below:
-Transaction: ${txData}`
+                        content: `Analyze this raw transaction object:
+${txData}`
                     }
                 ],
                 temperature: 0.1,
@@ -105,13 +112,7 @@ Transaction: ${txData}`
             });
 
             const aiResponse = completion.choices[0].message.content;
-            try {
-                return JSON.parse(aiResponse);
-            } catch (e) {
-                // Fallback parsing if JSON is wrapped in markdown
-                const jsonMatch = aiResponse.match(/\{.*\}/s);
-                return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-            }
+            return JSON.parse(aiResponse);
         } catch (error) {
             console.error('OpenAI error:', error);
             return null;
@@ -127,7 +128,12 @@ Transaction: ${txData}`
         res.json({
             summary: summary,
             risk_level: riskLevel,
-            explanation: (risks.join(" ") || "Analysis failed to produce a response. Please check transaction manually.")
+            risk_score: riskLevel === "HIGH" ? 95 : (riskLevel === "MEDIUM" ? 60 : 15),
+            risk_factors: risks,
+            explanation: {
+                simple: "We couldn't perform a deep analysis. " + (risks.length > 0 ? "Potential risks: " + risks.join(" ") : "Please review manually."),
+                technical: "AI analysis failed or returned invalid data. Falling back to keyword-based detection."
+            }
         });
     }
 });
