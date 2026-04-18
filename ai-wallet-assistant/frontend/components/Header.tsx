@@ -4,7 +4,6 @@ import { ConnectWallet } from './ConnectWallet';
 
 /**
  * Header component with wallet connection button
- * This is a client component to ensure wagmi hooks work properly
  */
 export default function Header() {
   return (
