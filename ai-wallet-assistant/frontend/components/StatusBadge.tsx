@@ -8,9 +8,9 @@ interface StatusBadgeProps {
 }
 
 const statusStyles: Record<Status, string> = {
-  Safe: "bg-[#16a34a] text-white shadow-[4px_4px_0_#052e16]",
-  Warning: "bg-[#ffd700] text-black shadow-[4px_4px_0_#854d0e]",
-  Critical: "bg-[#dc2626] text-white shadow-[4px_4px_0_#450a0a]"
+  Safe: "bg-[#00e676] text-black border-[#00b85c] shadow-[6px_6px_0_#00a655]",
+  Warning: "bg-[#ffd600] text-black border-[#e6c200] shadow-[6px_6px_0_#ccaa00]",
+  Critical: "bg-[#ff3b3b] text-white border-[#e52a2a] shadow-[6px_6px_0_#cc2424]"
 };
 
 export default function StatusBadge({ status, className = "" }: StatusBadgeProps) {

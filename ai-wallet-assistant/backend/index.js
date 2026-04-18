@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const OpenAI = require("openai");
+const analyzeWithAI = require('./analyzeWithAI');
 
 dotenv.config();
 
@@ -59,61 +60,19 @@ app.post("/analyze", async (req, res) => {
         summary = "MEDIUM RISK: Proceed with caution.";
     }
 
-    async function analyzeWithAI(txData) {
-        if (!process.env.NVIDIA_API_KEY || process.env.NVIDIA_API_KEY === 'nvapi-your-key-here') {
-            return {
-                summary: summary,
-                risk_level: riskLevel,
-                risk_score: riskLevel === "HIGH" ? 90 : riskLevel === "MEDIUM" ? 50 : 10,
-                risk_factors: risks,
-                explanation: {
-                    simple: risks.join(" ") || "No specific risks identified.",
-                    technical: "API key not configured. Using keyword fallback."
-                }
-            };
-        }
-
-        try {
-            const completion = await openai.chat.completions.create({
-                model: "meta/llama-3.3-70b-instruct",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a crypto security expert. Analyze transactions and return structured JSON: {summary, risk_level (LOW/MEDIUM/HIGH/CRITICAL), risk_score (0-100), risk_factors (array), explanation {simple, technical}}."
-                    },
-                    {
-                        role: "user",
-                        content: `Analyze: ${txData}`
-                    }
-                ],
-                temperature: 0.2,
-                top_p: 0.7,
-                max_tokens: 1024
-            });
-
-            return JSON.parse(completion.choices[0].message.content);
-        } catch (error) {
-            console.error('NVIDIA API error:', error);
-            return null;
-        }
-    }
-
-    const aiAnalysis = await analyzeWithAI(transaction_data);
+    console.log('POST /analyze received:', transaction_data.substring(0, 50) + '...');
     
-    if (aiAnalysis) {
-        res.json(aiAnalysis);
-    } else {
-        // Ultimate fallback
+    try {
+        const aiAnalysis = await analyzeWithAI(transaction_data, summary, riskLevel, risks);
+        console.log('AI analysis complete:', aiAnalysis.risk_level);
         res.json({
-            summary: summary,
-            risk_level: riskLevel,
-            risk_score: riskLevel === "HIGH" ? 95 : (riskLevel === "MEDIUM" ? 60 : 15),
-            risk_factors: risks,
-            explanation: {
-                simple: "We couldn't perform a deep analysis. " + (risks.length > 0 ? "Potential risks: " + risks.join(" ") : "Please review manually."),
-                technical: "AI analysis failed or returned invalid data. Falling back to keyword-based detection."
-            }
+            summary: aiAnalysis.summary,
+            risk_level: aiAnalysis.risk_level,
+            explanation: aiAnalysis.explanation
         });
+    } catch (err) {
+        console.error('AI analysis error:', err);
+        res.status(500).json({ error: "Analysis failed" });
     }
 });
 
@@ -124,8 +83,13 @@ app.post("/chat", async (req, res) => {
         return res.status(400).json({ error: "message is required" });
     }
 
+<<<<<<< HEAD
+    const context = transaction_data ? `Context transaction: ${transaction_data}\\n` : '';
+    const fullPrompt = `${context}Question: ${question}`;
+=======
     const context = transaction_data ? `Transaction context: ${transaction_data}` : '';
     const fullPrompt = `${context} Q: ${message}`;
+>>>>>>> 8c02ef48f325ea3b08178f8e8c515fc25bb8ca7b
 
     if (!process.env.NVIDIA_API_KEY || process.env.NVIDIA_API_KEY === 'nvapi-your-key-here') {
         return res.json({ reply: "Chat requires NVIDIA API key in .env. Message noted for demo." });

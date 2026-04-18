@@ -1,15 +1,12 @@
-# Git Cleanup Plan for ai-wallet-assistant
+# Debug & Fix All Errors - Progress Tracker
 
-**Approved Plan Steps:**
-
-1. ✅ Install Git for Windows - **Download https://git-scm.com/download/win → Run installer → Restart VSCode**
-2. ❌ `git --version` still fails (install pending)
-3. [ ] Check `git status` for CapCut files
-4. ✅ Created .gitignore with AppData/CapCut exclusions
-5. [ ] `git rm --cached -r "AppData/Local/CapCut/"` (remove from index)
-6. [ ] `git commit -m "Cleanup: remove CapCut cache files, add .gitignore"`
-7. [ ] Verify clean `git status`
-8. [ ] Test project run (backend/frontend)
-
-**Status**: .gitignore ✅ | Git install needed (`git` not in PATH). VSCode Git panel should now ignore new CapCut files. Check if warnings gone.
-
+## [x] Step 1: Understand project (searches + read 20+ files done)
+## [x] Step 2: Detailed error report & plan (delivered)
+## [x] Step 3: Read remaining components (HistoryTable, SafetyPanel, StatsPanel, HistoryCard)
+## [x] Step 4: Fix eslint.config.mjs (linter)
+## [x] Step 5: Fix backend/index.js (syntax/async - full rewrite)
+## [x] Step 6: Fix history/[id]/page.tsx (TS type)
+## [x] Step 7: Fix/Complete history/page.tsx (full brutalist page w/ components)
+## [x] Step 9: Create .env.example
+## [ ] Step 8: npm install frontend/backend + lint/build test
+## [ ] Step 10: Full test (dev servers)
