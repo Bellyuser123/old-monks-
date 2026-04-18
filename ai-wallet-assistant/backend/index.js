@@ -121,6 +121,7 @@ Also:
             explanation: aiAnalysis.explanation
         });
     }).catch(err => {
+        res.status(500).json({ error: "Analysis failed" });
         console.error('AI analysis error:', err);
         res.json({
             summary: keywordSummary,
@@ -129,6 +130,7 @@ Also:
         });
     });
 });
+
 
 app.post("/chat", async (req, res) => {
     const { question, transaction_data } = req.body;
