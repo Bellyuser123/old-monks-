@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const OpenAI = require("openai");
+const analyzeWithAI = require('./analyzeWithAI');
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/analyze", (req, res) => {
+app.post("/analyze", async (req, res) => {
     const { transaction_data } = req.body || {};
 
     if (!transaction_data) {
@@ -49,88 +50,21 @@ app.post("/analyze", (req, res) => {
         summary = "MEDIUM RISK: Proceed with caution.";
     }
 
-async function analyzeWithAI(txData) {
-        if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {
-            return {
-                summary: summary,
-                risk_level: riskLevel,
-                explanation: "OpenAI not configured. Set OPENAI_API_KEY in .env. Using keyword analysis only."
-            };
-        }
-
-        try {
-            const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are a crypto security expert.
-Explain the given blockchain transaction in simple terms for a beginner.
-
-Also:
-- Identify if it is risky or safe
-- Detect scams like unlimited approvals, phishing, draining wallets
-- Return ONLY valid JSON: {
-  "summary": "1 line simple explanation",
-  "risk_level": "LOW" | "MEDIUM" | "HIGH", 
-  "explanation": "clear reasoning"
-}`
-                    },
-                    {
-                        role: "user",
-                        content: `Transaction: ${txData}`
-                    }
-                ],
-                temperature: 0.1
-            });
-
-            const aiResponse = completion.choices[0].message.content;
-            // Parse JSON from response
-            const jsonMatch = aiResponse.match(/\{.*\}/s);
-            if (jsonMatch) {
-                const aiResult = JSON.parse(jsonMatch[0]);
-                return aiResult;
-            }
-            return {
-                summary: summary,
-                risk_level: riskLevel, 
-                explanation: aiResponse || "AI analysis failed to parse."
-            };
-        } catch (error) {
-            console.error('OpenAI error:', error);
-            return {
-                summary: summary,
-                risk_level: riskLevel,
-                explanation: "AI service temporarily unavailable. Using keyword analysis."
-            };
-        }
-    }
-
     console.log('POST /analyze received:', transaction_data.substring(0, 50) + '...');
     
-    // Keyword analysis first
-    let keywordRisk = riskLevel;
-    let keywordSummary = summary;
-    
-    // Async AI analysis (no double response)
-    analyzeWithAI(transaction_data).then(aiAnalysis => {
+    try {
+        const aiAnalysis = await analyzeWithAI(transaction_data, summary, riskLevel, risks);
         console.log('AI analysis complete:', aiAnalysis.risk_level);
         res.json({
-            summary: aiAnalysis.summary || keywordSummary,
-            risk_level: aiAnalysis.risk_level || keywordRisk,
+            summary: aiAnalysis.summary,
+            risk_level: aiAnalysis.risk_level,
             explanation: aiAnalysis.explanation
         });
-    }).catch(err => {
-        res.status(500).json({ error: "Analysis failed" });
+    } catch (err) {
         console.error('AI analysis error:', err);
-        res.json({
-            summary: keywordSummary,
-            risk_level: keywordRisk,
-            explanation: risks.join(" ") || "Keyword analysis complete. AI temporarily unavailable."
-        });
-    });
+        res.status(500).json({ error: "Analysis failed" });
+    }
 });
-
 
 app.post("/chat", async (req, res) => {
     const { question, transaction_data } = req.body;
@@ -139,7 +73,7 @@ app.post("/chat", async (req, res) => {
         return res.status(400).json({ error: "question is required" });
     }
 
-    const context = transaction_data ? `Context transaction: ${transaction_data}\n` : '';
+    const context = transaction_data ? `Context transaction: ${transaction_data}\\n` : '';
     const fullPrompt = `${context}Question: ${question}`;
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-your-openai-api-key-here') {

@@ -9,7 +9,7 @@ import Link from 'next/link';
 export default function HistoryDetail() {
   const params = useParams();
   const id = params.id as string;
-  const [analysis, setAnalysis] = useState(null);
+const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
