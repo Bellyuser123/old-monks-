@@ -62,11 +62,37 @@ export function ConnectWallet() {
     initAppKit();
   }, []);
 
-  const handleConnectWallet = async () => {
+const API_BASE_URL = 'http://localhost:5000/api';
+
+async function loginUser(walletAddress, password) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletAddress, password })
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Login failed:', error);
+    throw error;
+  }
+}
+
+const handleConnectWallet = async () => {
     try {
       // Use AppKit's open method to show the modal
       if (window.appKit && window.appKit.open) {
         window.appKit.open();
+        // After connect, login to backend if password stored or prompt
+        if (address) {
+          // Assume password from localStorage or prompt
+          const password = prompt('Enter password for backend auth');
+          if (password) {
+            const result = await loginUser(address, password);
+            console.log('Backend auth success:', result);
+          }
+        }
       } else {
         console.warn('AppKit not initialized or open method not available');
         // Fallback: try to click the web component

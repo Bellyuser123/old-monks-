@@ -625,15 +625,140 @@
       }, 3000);
     });
 
-    // Wallet Connect Buttons (fake)
-    document.querySelector('.btn-secondary').addEventListener('click', () => {
-      alert('🦊 MetaMask detected! Connecting... (Demo mode)');
-    });
-    document.querySelector('.btn-walletconnect').addEventListener('click', () => {
-      alert('🔗 WalletConnect QR scanned! Connecting... (Demo mode)');
+// API Base URL Configuration
+    const API_BASE_URL = 'http://localhost:5000/api';
+
+    // Wallet Connection API Call
+    async function connectWallet(walletAddress, password) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/connect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress, password })
+        });
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Wallet connection failed:', error);
+        throw error;
+      }
+    }
+
+    // Login API Call
+    async function loginUser(walletAddress, password) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress, password })
+        });
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
+      }
+    }
+
+    // MetaMask Connect
+    async function connectMetaMask() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+          });
+          const walletAddress = accounts[0];
+          const result = await connectWallet(walletAddress, null);
+          return result;
+        } catch (error) {
+          console.error('MetaMask connection failed:', error);
+          throw error;
+        }
+      } else {
+        throw new Error('MetaMask not installed. Please install MetaMask.');
+      }
+    }
+
+    // WalletConnect button (placeholder)
+    async function connectWalletConnect() {
+      // Placeholder for WalletConnect
+      console.log('WalletConnect clicked');
+      throw new Error('WalletConnect integration coming soon');
+    }
+
+    // Update CONNECT WALLET button to use API
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const walletAddr = document.getElementById('wallet-address').value.trim();
+      const password = document.getElementById('password').value;
+      const email = document.getElementById('email').value.trim();
+      const confirmPwd = document.getElementById('confirm-password').value;
+
+      // Validation (existing)
+      // ... (keep existing validation code)
+
+      if (!valid) {
+        // ... (keep existing error handling)
+        return;
+      }
+
+      connectBtn.disabled = true;
+      connectBtn.classList.add('btn-loading');
+
+      try {
+        let result;
+        if (currentView === 'signup') {
+          result = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress: walletAddr, password, email })
+          });
+        } else {
+          result = await loginUser(walletAddr, password);
+        }
+
+        const data = await result.json();
+
+        if (data.success) {
+          connectBtn.disabled = false;
+          connectBtn.classList.remove('btn-loading');
+          connectBtn.querySelector('span').textContent = currentView === 'signup' ? 'ACCOUNT CREATED' : 'CONNECTED';
+          successMsg.textContent = data.success;
+          successMsg.style.display = 'block';
+        } else {
+          throw new Error(data.error || 'API error');
+        }
+      } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      } finally {
+        connectBtn.disabled = false;
+        connectBtn.classList.remove('btn-loading');
+      }
     });
 
-    // Input pulsing on focus
+    // Real wallet connect buttons
+    document.querySelector('.btn-secondary').addEventListener('click', async () => {
+      try {
+        await connectMetaMask();
+        successMsg.textContent = 'MetaMask connected!';
+        successMsg.style.display = 'block';
+      } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      }
+    });
+
+    document.querySelector('.btn-walletconnect').addEventListener('click', async () => {
+      try {
+        await connectWalletConnect();
+      } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      }
+    });
+
+    // Input pulsing on focus (existing)
     ['wallet-address', 'password', 'email', 'confirm-password'].forEach(id => {
       document.getElementById(id).addEventListener('focus', function() {
         this.parentElement.parentElement.classList.add('focused');
@@ -643,6 +768,8 @@
       });
     });
   </script>
+</body>
+</html>
 </body>
 </html>
 ">

@@ -1,10 +1,16 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const OpenAI = require("openai");
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const OpenAI = require('openai');
 const analyzeWithAI = require('./analyzeWithAI');
+const authRoutes = require('./routes/auth');
 
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const openai = new OpenAI({
   baseURL: process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",
@@ -13,9 +19,17 @@ const openai = new OpenAI({
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '10mb' }));
 
+// API Routes - Auth
+app.use('/api/auth', authRoutes);
+
+// Existing AI Routes
 app.post("/analyze", async (req, res) => {
     const { transaction_data } = req.body || {};
 
@@ -75,13 +89,8 @@ app.post("/chat", async (req, res) => {
         return res.status(400).json({ error: "message is required" });
     }
 
-<<<<<<< HEAD
-    const context = transaction_data ? `Context transaction: ${transaction_data}\\n` : '';
-    const fullPrompt = `${context}Question: ${question}`;
-=======
     const context = transaction_data ? `Transaction context: ${transaction_data}` : '';
     const fullPrompt = `${context} Q: ${message}`;
->>>>>>> 8c02ef48f325ea3b08178f8e8c515fc25bb8ca7b
 
     if (!process.env.NVIDIA_API_KEY || process.env.NVIDIA_API_KEY === 'nvapi-your-key-here') {
         return res.json({ reply: "Chat requires NVIDIA API key in .env. Message noted for demo." });
@@ -113,4 +122,8 @@ app.post("/chat", async (req, res) => {
     }
 });
 
-app.listen(5000, () => console.log("AI Wallet Backend on port 5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`AI Wallet Backend on port ${PORT}`);
+});
+
