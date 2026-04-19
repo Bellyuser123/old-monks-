@@ -7,12 +7,18 @@ dotenv.config();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://integrate.api.nvidia.com/v1"
 });
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.get("/", (req, res) => {
+    res.json({ message: "AI Wallet Assistant Backend is running!" });
+});
+
+
 
 app.post("/analyze", async (req, res) => {
     const { transaction_data } = req.body || {};
@@ -67,7 +73,7 @@ app.post("/analyze", async (req, res) => {
 
         try {
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+                model: "meta/llama-3.3-70b-instruct",
                 messages: [
                     {
                         role: "system",
@@ -155,7 +161,7 @@ app.post("/chat", async (req, res) => {
 
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "meta/llama-3.3-70b-instruct",
             messages: [
                 {
                     role: "system",
@@ -172,7 +178,7 @@ app.post("/chat", async (req, res) => {
         res.json({ reply });
     } catch (error) {
         console.error('Chat OpenAI error:', error);
-        res.status(500).json({ error: "Chat analysis failed" });
+        res.json({ reply: `[AI TERMINAL ERROR] Authentication failed with AI Provider (${error.message}). Please update backend/.env with a valid OpenRouter API key.` });
     }
 });
 

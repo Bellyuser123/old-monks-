@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Analysis } from '@/lib/history';
 import StatusBadge from './StatusBadge';
 
@@ -13,15 +12,22 @@ interface HistoryTableProps {
 export default function HistoryTable({ analyses }: HistoryTableProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [filterMode, setFilterMode] = useState<string>('ALL');
 
   const filteredAnalyses = useMemo(() => {
-    if (!search) return analyses;
-    const q = search.toLowerCase();
-    return analyses.filter(a => 
-      a.inputText.toLowerCase().includes(q) ||
-      a.result.summary.toLowerCase().includes(q)
-    );
-  }, [analyses, search]);
+    let filtered = analyses.filter(a => a && a.result && a.inputText);
+    if (filterMode !== 'ALL') {
+      filtered = filtered.filter(a => a.result.status?.toUpperCase() === filterMode);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(a => 
+        (a.inputText || '').toLowerCase().includes(q) ||
+        (a.result.summary || '').toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [analyses, search, filterMode]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString('en-US', {
@@ -36,61 +42,145 @@ export default function HistoryTable({ analyses }: HistoryTableProps) {
   const truncate = (text: string, max: number) => 
     text.length > max ? text.slice(0, max) + '...' : text;
 
-  if (filteredAnalyses.length === 0) {
+  if (analyses.length === 0) {
     return (
-      <div className="border-8 border-black bg-white shadow-[20px_20px_0_black] rotate-1 p-12 text-center">
-        <h2 className="text-4xl font-black uppercase tracking-widest mb-4 text-black">NO ANALYSES</h2>
-        <p className="text-xl font-mono text-gray-600">Start analyzing transactions to see history here.</p>
+      <div style={{
+        padding: '4rem',
+        border: '6px solid black',
+        backgroundColor: '#ffff00',
+        boxShadow: '10px 10px 0 black',
+        textAlign: 'center',
+        rotate: '1deg'
+      }}>
+        <h2 style={{ fontSize: '3rem', fontWeight: '900', color: 'black', margin: '0 0 1rem 0', textTransform: 'uppercase' }}>
+          DATABASE EMPTY
+        </h2>
+        <p style={{ fontSize: '1.25rem', fontFamily: 'monospace', color: 'black', fontWeight: 'bold' }}>
+          Execute an analysis to generate history.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center">
-        <input
-          type="text"
-          placeholder="Search analyses..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-6 py-4 border-4 border-black bg-gray-50 font-mono text-lg shadow-[6px_6px_0_black] focus:outline-none focus:border-gray-800"
-        />
-        <span className="text-sm font-mono text-gray-500">
-          {filteredAnalyses.length} of {analyses.length} results
-        </span>
+    <div style={{ width: '100%', fontFamily: '"Arial Black", sans-serif', color: 'black' }}>
+      
+      {/* Controls */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        marginBottom: '3rem',
+        padding: '1.5rem',
+        backgroundColor: '#111',
+        border: '4px solid black',
+        boxShadow: '8px 8px 0 #00ffff'
+      }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="SEARCH RECORDS..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              flex: '1',
+              minWidth: '200px',
+              padding: '1rem 1.5rem',
+              border: '4px solid black',
+              backgroundColor: '#ffff00',
+              fontFamily: 'monospace',
+              fontSize: '1.2rem',
+              fontWeight: 'bold',
+              color: 'black',
+              boxShadow: 'inset 4px 4px 0 rgba(0,0,0,0.1)'
+            }}
+          />
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {['ALL', 'SAFE', 'WARNING', 'CRITICAL'].map((f) => {
+               let bgColor = '#fff';
+               if (f === 'SAFE') bgColor = '#00ff00';
+               if (f === 'WARNING') bgColor = '#ffff00';
+               if (f === 'CRITICAL') bgColor = '#ff0000';
+               return (
+                 <button
+                   key={f}
+                   onClick={() => setFilterMode(f)}
+                   style={{
+                     padding: '0.75rem 1.25rem',
+                     backgroundColor: filterMode === f ? bgColor : '#fff',
+                     color: filterMode === f && f === 'CRITICAL' ? '#fff' : 'black',
+                     border: '3px solid black',
+                     fontWeight: '900',
+                     cursor: 'pointer',
+                     boxShadow: filterMode === f ? 'inset 3px 3px 0 rgba(0,0,0,0.2)' : '3px 3px 0 black'
+                   }}
+                 >
+                   {f}
+                 </button>
+               );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-8 border-black bg-white shadow-[16px_16px_0_black] rotate-1">
-          <thead>
-            <tr className="bg-gray-900 text-white">
-              <th className="p-6 text-left font-black uppercase tracking-wider text-xl border-r-4 border-white">Date</th>
-              <th className="p-6 text-left font-black uppercase tracking-wider text-xl border-r-4 border-white">Input</th>
-              <th className="p-6 text-center font-black uppercase tracking-wider text-xl">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAnalyses.map((analysis) => (
-              <tr 
+      {/* Cards List */}
+      {filteredAnalyses.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: '#eee', border: '4px solid black' }}>
+          <h3 style={{ fontSize: '2rem', margin: 0 }}>NO RELEVANT RECORDS FOUND</h3>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {filteredAnalyses.map((analysis, i) => {
+            const isCritical = analysis.result.status?.toUpperCase() === 'CRITICAL';
+            const isSafe = analysis.result.status?.toUpperCase() === 'SAFE';
+            return (
+              <div 
                 key={analysis.id}
-                className="hover:bg-gray-50 border-t-4 border-black cursor-pointer transition-all hover:shadow-[4px_4px_0_black]"
                 onClick={() => router.push(`/history/${analysis.id}`)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '1.5rem',
+                  border: '5px solid black',
+                  backgroundColor: isCritical ? '#ffe6e6' : (isSafe ? '#f0fff0' : '#fff'),
+                  color: 'black',
+                  boxShadow: '8px 8px 0 black',
+                  cursor: 'pointer',
+                  transition: 'all 0.1s',
+                  rotate: i % 2 === 0 ? '0.5deg' : '-0.5deg'
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'translate(4px, 4px)';
+                  e.currentTarget.style.boxShadow = '4px 4px 0 black';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '8px 8px 0 black';
+                }}
               >
-                <td className="p-6 font-mono text-lg border-r-4 border-black">
-                  {formatDate(analysis.timestamp)}
-                </td>
-                <td className="p-6 font-mono text-lg max-w-md truncate" title={analysis.inputText}>
-                  {truncate(analysis.inputText, 80)}
-                </td>
-                <td className="p-6 text-center">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '3px solid black', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '1rem', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                    {formatDate(analysis.timestamp)}
+                  </div>
                   <StatusBadge status={analysis.result.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+                
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>
+                  {analysis.result.summary}
+                </h3>
+                
+                <p style={{ fontSize: '1rem', fontFamily: 'monospace', margin: 0, padding: '1rem', backgroundColor: '#f0f0f0', border: '2px solid black', color: 'black' }}>
+                  {truncate(analysis.inputText, 120)}
+                </p>
+                
+                <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+                  <span style={{ backgroundColor: 'black', color: 'white', padding: '0.4rem 0.8rem', fontWeight: '900' }}>→ OPEN REPORT</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-
