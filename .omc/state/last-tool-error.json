@@ -1,7 +1,7 @@
 {
-  "tool_name": "WebFetch",
-  "tool_input_preview": "{\"url\":\"http://localhost:3000/history\",\"prompt\":\"Check if this page contains any wallet connect button or appkit-button elements in the HTML\"}",
-  "error": "Invalid URL",
-  "timestamp": "2026-04-18T22:17:44.221Z",
-  "retry_count": 2
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"gh pr create --title \\\"AI/LLM: Enhance backend logging and resolve merge conflicts\\\" --body \\\"$(cat <<'EOF'\\n## Summary\\n\\n- Enhance backend logging and resolve merge conflicts in AI/LLM b...",
+  "error": "Exit code 127\n/usr/bin/bash: line 20: gh: command not found",
+  "timestamp": "2026-04-19T03:58:55.165Z",
+  "retry_count": 1
 }

@@ -3,7 +3,10 @@
     "allow": [
       "Bash(cd:*)",
       "WebFetch(domain:localhost)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(git remote:*)"
     ]
   }
 }
