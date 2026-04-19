@@ -16,6 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/analyze", async (req, res) => {
+    console.log(`[BACKEND] Received /analyze request at ${new Date().toISOString()}`);
     const { transaction_data } = req.body || {};
 
     if (!transaction_data) {
@@ -93,17 +94,19 @@ app.post("/analyze", async (req, res) => {
     const aiAnalysis = await analyzeWithAI(transaction_data);
     
     if (aiAnalysis) {
+        console.log("[BACKEND] AI Analysis successful");
         res.json(aiAnalysis);
     } else {
-        // Ultimate fallback
-        res.json({
-            summary: summary,
-            risk_level: riskLevel,
-            risk_score: riskLevel === "HIGH" ? 95 : (riskLevel === "MEDIUM" ? 60 : 15),
-            risk_factors: risks,
-            explanation: {
-                simple: "We couldn't perform a deep analysis. " + (risks.length > 0 ? "Potential risks: " + risks.join(" ") : "Please review manually."),
-                technical: "AI analysis failed or returned invalid data. Falling back to keyword-based detection."
+        console.warn("[BACKEND] AI Analysis failed. Returning documented error response.");
+        // Match documented 500 Internal Server Error structure
+        res.status(500).json({
+            error: "Analysis failed",
+            message: "AI service temporarily unavailable. Using keyword analysis fallback for safety.",
+            fallback_data: {
+                summary: summary,
+                risk_level: riskLevel,
+                risk_score: riskLevel === "HIGH" ? 95 : (riskLevel === "MEDIUM" ? 60 : 15),
+                risk_factors: risks
             }
         });
     }
@@ -144,8 +147,8 @@ app.post("/chat", async (req, res) => {
         const reply = completion.choices[0].message.content;
         res.json({ reply });
     } catch (error) {
-        console.error('Chat NVIDIA API error:', error);
-        res.status(500).json({ error: "Chat analysis failed" });
+        console.error('Chat OpenAI error:', error);
+        res.status(500).json({ reply: `[AI TERMINAL ERROR] Authentication failed with AI Provider (${error.message}). Please update backend/.env with a valid API key.` });
     }
 });
 
