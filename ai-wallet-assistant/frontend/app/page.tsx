@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, FormEvent } from 'react';
+import { saveAnalysis, createAnalysis, getAnalysisById } from '@/lib/history';
+import Link from 'next/link';
 
 interface AnalysisResult {
   summary: string;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
-  explanation: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  explanation: {
+    simple: string;
+    technical: string;
+  } | string;
 }
 
 interface ChatMessage {
@@ -15,8 +20,10 @@ interface ChatMessage {
 
 export default function Home() {
   const [transactionData, setTransactionData] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
@@ -48,12 +55,33 @@ export default function Home() {
 
       const data: AnalysisResult = await response.json();
       setResult(data);
+
+      // Auto-save to history
+      const statusMap = {
+        LOW: 'Safe' as const,
+        MEDIUM: 'Warning' as const,
+        HIGH: 'Critical' as const,
+        CRITICAL: 'Critical' as const,
+      };
+      const analysis = createAnalysis(
+        transactionData,
+        {
+          status: statusMap[data.risk_level as keyof typeof statusMap] || 'Warning',
+          summary: data.summary,
+          details: typeof data.explanation === 'object' 
+            ? `${data.explanation.simple}\n\nTechnical: ${data.explanation.technical}`
+            : data.explanation,
+        }
+      );
+      saveAnalysis(analysis);
+      setCurrentAnalysisId(analysis.id);
     } catch (err: any) {
       setError(err.message || 'Analysis failed. Start backend: cd ai-wallet-assistant/backend && node index.js');
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleTryExample = () => {
     setTransactionData(RISKY_EXAMPLE);
@@ -75,7 +103,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          question: chatInput,
+          message: chatInput,
           transaction_data: result ? transactionData : undefined 
         }),
       });
@@ -85,8 +113,21 @@ export default function Home() {
       }
 
       const data = await response.json();
-      const aiMessage: ChatMessage = { type: 'ai', text: data.answer || 'No response' };
-      setChatMessages([...tempMessages, aiMessage]);
+      const aiMessage: ChatMessage = { type: 'ai', text: data.reply || 'No response' };
+      const newMessages = [...tempMessages, aiMessage];
+      setChatMessages(newMessages);
+
+      // Append to analysis chatHistory if result exists
+      if (result && transactionData && currentAnalysisId) {
+        const existing = getAnalysisById(currentAnalysisId);
+        if (existing) {
+          existing.chatHistory = newMessages.map(m => ({
+            role: m.type === 'user' ? 'user' : 'assistant',
+            message: m.text
+          }));
+          saveAnalysis(existing);
+        }
+      }
     } catch (err: any) {
       const errorMessage: ChatMessage = { type: 'ai', text: `Error: ${err.message}. Backend must be running.` };
       setChatMessages([...tempMessages, errorMessage]);
@@ -94,6 +135,7 @@ export default function Home() {
       setChatLoading(false);
     }
   };
+
 
   const getRiskStyle = (risk: string) => {
     const styles = {
@@ -148,6 +190,36 @@ export default function Home() {
           }}>
             BRUTAL TRANSACTION ANALYSIS
           </p>
+
+          <div style={{ marginTop: '2rem' }}>
+            <Link href="/login" style={{
+              display: 'inline-block',
+              padding: '1rem 2rem',
+              backgroundColor: '#00f5ff',
+              color: 'black',
+              border: '4px solid black',
+              boxShadow: '6px 6px 0 black',
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              fontSize: '1.2rem',
+              transition: 'all 0.1s'
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'translate(4px, 4px)';
+              e.currentTarget.style.boxShadow = '2px 2px 0 black';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '6px 6px 0 black';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '6px 6px 0 black';
+            }}>
+              🔗 CONNECT WALLET
+            </Link>
+          </div>
         </div>
 
         <div style={{
@@ -315,18 +387,46 @@ export default function Home() {
                     {result.summary}
                   </h3>
                 </div>
-                <p style={{
+                <div style={{
                   fontSize: '1.1rem',
                   color: 'black',
-                  lineHeight: 1.6,
+                  lineHeight: '1.6',
                   margin: 0,
                   fontFamily: 'monospace',
                   fontWeight: '500'
                 }}>
-                  {result.explanation}
-                </p>
+                  {typeof result.explanation === 'object' ? (
+                    <>
+                      <p style={{ marginBottom: '1rem' }}>
+                        <strong style={{ backgroundColor: 'black', color: 'white', padding: '2px 6px' }}>SIMPLE:</strong><br/>
+                        {result.explanation.simple}
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        <strong style={{ backgroundColor: 'black', color: 'white', padding: '2px 6px' }}>TECHNICAL:</strong><br/>
+                        {result.explanation.technical}
+                      </p>
+                    </>
+                  ) : (
+                    <p>{result.explanation}</p>
+                  )}
+                </div>
+                <Link href="/history" style={{
+                  display: 'inline-block',
+                  marginTop: '1.5rem',
+                  padding: '1rem 2rem',
+                  backgroundColor: '#4f46e5',
+                  color: 'white',
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  border: '3px solid black',
+                  boxShadow: '4px 4px 0 black',
+                  fontFamily: '"Arial Black", sans-serif'
+                }}>
+                  VIEW IN HISTORY →
+                </Link>
               </div>
             )}
+
           </div>
 
           {/* Chat Panel */}
