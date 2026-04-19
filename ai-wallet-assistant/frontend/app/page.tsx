@@ -1,18 +1,11 @@
 "use client";
 
 import { useState, FormEvent } from 'react';
-import { saveAnalysis, createAnalysis } from '@/lib/history';
-import Link from 'next/link';
 
 interface AnalysisResult {
   summary: string;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  risk_score?: number;
-  risk_factors?: string[];
-  explanation: {
-    simple: string;
-    technical: string;
-  };
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  explanation: string;
 }
 
 interface ChatMessage {
@@ -22,7 +15,6 @@ interface ChatMessage {
 
 export default function Home() {
   const [transactionData, setTransactionData] = useState('');
-
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState('');
@@ -56,31 +48,12 @@ export default function Home() {
 
       const data: AnalysisResult = await response.json();
       setResult(data);
-
-      // Auto-save to history
-      const statusMap = {
-        LOW: 'Safe' as const,
-        MEDIUM: 'Warning' as const,
-        HIGH: 'Critical' as const,
-      };
-      const analysis = createAnalysis(
-        transactionData,
-        {
-          status: statusMap[data.risk_level as keyof typeof statusMap],
-          summary: data.summary,
-          details: typeof data.explanation === 'object'
-            ? `${data.explanation.simple}\n\n${data.explanation.technical}`
-            : data.explanation,
-        }
-      );
-      saveAnalysis(analysis);
     } catch (err: any) {
       setError(err.message || 'Analysis failed. Start backend: cd ai-wallet-assistant/backend && node index.js');
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleTryExample = () => {
     setTransactionData(RISKY_EXAMPLE);
@@ -102,7 +75,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: chatInput,
+          question: chatInput,
           transaction_data: result ? transactionData : undefined 
         }),
       });
@@ -112,31 +85,8 @@ export default function Home() {
       }
 
       const data = await response.json();
-      const aiMessage: ChatMessage = { type: 'ai', text: data.reply || 'No response' };
-      const newMessages = [...tempMessages, aiMessage];
-      setChatMessages(newMessages);
-
-      // Append to analysis chatHistory if result exists
-      if (result && transactionData) {
-        const statusMap = {
-          LOW: 'Safe' as const,
-          MEDIUM: 'Warning' as const,
-          HIGH: 'Critical' as const,
-        };
-        const analysis = createAnalysis(
-          transactionData,
-          {
-            status: statusMap[result.risk_level as keyof typeof statusMap],
-            summary: result.summary,
-            details: result.explanation.simple || JSON.stringify(result.explanation),
-          },
-          newMessages.map(m => ({
-            role: m.type === 'user' ? 'user' : 'assistant',
-            message: m.text
-          }))
-        );
-        saveAnalysis(analysis);
-      }
+      const aiMessage: ChatMessage = { type: 'ai', text: data.answer || 'No response' };
+      setChatMessages([...tempMessages, aiMessage]);
     } catch (err: any) {
       const errorMessage: ChatMessage = { type: 'ai', text: `Error: ${err.message}. Backend must be running.` };
       setChatMessages([...tempMessages, errorMessage]);
@@ -144,7 +94,6 @@ export default function Home() {
       setChatLoading(false);
     }
   };
-
 
   const getRiskStyle = (risk: string) => {
     const styles = {
@@ -158,132 +107,106 @@ export default function Home() {
   return (
     <main style={{
       minHeight: '100vh',
-      padding: '64px 32px',
-      backgroundColor: '#fafafa',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui',
-      lineHeight: 1.6
+      padding: '4rem 2rem',
+      backgroundColor: '#f5f5f5',
+      fontFamily: '"Arial Black", Arial, sans-serif',
+      lineHeight: 1.4
     }}>
       <div style={{
-        maxWidth: '900px',
-        margin: '0 auto'
-      }}> 
-        <header style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        border: '5px solid black',
+        backgroundColor: 'white',
+        boxShadow: '10px 10px 0 black',
+        rotate: '1deg'
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '2rem 3rem',
+          borderBottom: '5px solid black',
+          backgroundColor: '#fff',
           textAlign: 'center',
-          marginBottom: '64px',
-          paddingBottom: '32px'
+          margin: '-5px -5px 0 -5px'
         }}>
           <h1 style={{
-            fontSize: '48px',
-            fontWeight: '700',
-            color: '#111',
-            marginBottom: '16px',
-            lineHeight: 1.1
+            fontSize: '4rem',
+            fontWeight: '900',
+            color: 'black',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            margin: 0,
+            fontFamily: '"Arial Black", sans-serif'
           }}>
-            AI Wallet Assistant
+            AI WALLET ASSISTANT
           </h1>
           <p style={{
-            fontSize: '20px',
-            color: '#666',
-            margin: 0
+            fontSize: '1.5rem',
+            color: 'black',
+            fontWeight: 'bold',
+            margin: '1rem 0 0 0',
+            fontFamily: 'monospace'
           }}>
-            Clean transaction analysis
+            BRUTAL TRANSACTION ANALYSIS
           </p>
-        </header>
+        </div>
 
-        {/* Analysis Section */}
-        <section style={{
-          marginBottom: '64px',
-          padding: '32px',
-          backgroundColor: 'white',
-          border: '1px solid #eee',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '3rem',
+          padding: '3rem'
         }}>
-          <h2 style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#111',
-            marginBottom: '32px'
+          {/* Analysis Panel */}
+          <div style={{
+            border: '4px solid black',
+            backgroundColor: '#fff',
+            boxShadow: '8px 8px 0 black',
+            rotate: '0.5deg',
+            padding: '2rem'
           }}>
-            Analyze Transaction
-          </h2>
-          
-          <button
-            onClick={handleTryExample}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#f0f0f0',
-              color: '#111',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              marginBottom: '24px',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-          >
-            Try Example
-          </button>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '900',
+              color: 'black',
+              margin: '0 0 1.5rem 0',
+              borderBottom: '3px solid black',
+              paddingBottom: '0.5rem',
+              fontFamily: '"Arial Black", sans-serif'
+            }}>
+              ANALYZE TX
+            </h2>
 
-          <form onSubmit={handleAnalyze} style={{ marginBottom: '32px' }}>
-            <textarea
-              value={transactionData}
-              onChange={(e) => setTransactionData(e.target.value)}
-              placeholder="Paste your transaction data here..."
-              style={{
-                width: '100%',
-                minHeight: '160px',
-                padding: '20px',
-                border: '1px solid #ddd',
-                borderRadius: '12px',
-                fontFamily: 'monospace',
-                fontSize: '16px',
-                lineHeight: 1.6,
-                resize: 'vertical',
-                outline: 'none',
-                backgroundColor: 'white',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-              }}
-              disabled={loading}
-            />
             <button
-              type="submit"
-              disabled={loading || !transactionData.trim()}
+              onClick={handleTryExample}
               style={{
-                width: '100%',
-                padding: '20px',
-                backgroundColor: '#0070f3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                marginTop: '20px',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(0,112,243,0.3)'
+                padding: '1rem 2rem',
+                backgroundColor: '#ffd700',
+                color: 'black',
+                border: '4px solid black',
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                fontFamily: '"Arial Black", sans-serif',
+                cursor: 'pointer',
+                boxShadow: '6px 6px 0 black',
+                marginBottom: '2rem',
+                transition: 'all 0.1s'
               }}
-              onMouseOver={(e) => {
-                if (!loading && transactionData.trim()) {
-                  e.currentTarget.style.backgroundColor = '#0056b3';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,112,243,0.4)';
-                }
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'translate(4px, 4px)';
+                e.currentTarget.style.boxShadow = '2px 2px 0 black';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = '';
+                e.currentTarget.style.boxShadow = '6px 6px 0 black';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#0070f3';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,112,243,0.3)';
+                e.currentTarget.style.transform = '';
+                e.currentTarget.style.boxShadow = '6px 6px 0 black';
               }}
             >
-              {loading ? 'Analyzing...' : 'Analyze'}
+              LOAD DANGER EXAMPLE
             </button>
-          </form>
 
-<<<<<<< HEAD
-          {error && (
-=======
             <form onSubmit={handleAnalyze} style={{ marginBottom: '2rem' }}>
               <textarea
                 value={transactionData}
@@ -392,68 +315,18 @@ export default function Home() {
                     {result.summary}
                   </h3>
                 </div>
-                {result.risk_score !== undefined && (
-                  <div style={{
-                    padding: '0.5rem 1rem',
-                    border: '2px solid black',
-                    backgroundColor: '#f5f5f5',
-                    color: 'black',
-                    fontWeight: 'bold',
-                    marginBottom: '1rem',
-                    fontFamily: 'monospace'
-                  }}>
-                    RISK SCORE: {result.risk_score}/100
-                  </div>
-                )}
-                {result.risk_factors && result.risk_factors.length > 0 && (
-                  <ul style={{
-                    margin: '0 0 1rem 0',
-                    paddingLeft: '1.5rem',
-                    fontFamily: 'monospace',
-                    fontWeight: '500',
-                    color: 'black'
-                  }}>
-                    {result.risk_factors.map((factor, i) => (
-                      <li key={i} style={{ marginBottom: '0.3rem', color: 'black' }}>{factor}</li>
-                    ))}
-                  </ul>
-                )}
                 <p style={{
-                  fontSize: '1rem',
+                  fontSize: '1.1rem',
                   color: 'black',
                   lineHeight: 1.6,
-                  margin: '0 0 0.75rem 0',
+                  margin: 0,
                   fontFamily: 'monospace',
                   fontWeight: '500'
                 }}>
-                  <strong>Simple:</strong> {result.explanation?.simple}
+                  {result.explanation}
                 </p>
-                <p style={{
-                  fontSize: '0.9rem',
-                  color: '#444',
-                  lineHeight: 1.6,
-                  margin: 0,
-                  fontFamily: 'monospace'
-                }}>
-                  <strong>Technical:</strong> {result.explanation?.technical}
-                </p>
-                <Link href="/history" style={{
-                  display: 'inline-block',
-                  marginTop: '1.5rem',
-                  padding: '1rem 2rem',
-                  backgroundColor: '#4f46e5',
-                  color: 'white',
-                  textDecoration: 'none',
-                  fontWeight: 'bold',
-                  border: '3px solid black',
-                  boxShadow: '4px 4px 0 black',
-                  fontFamily: '"Arial Black", sans-serif'
-                }}>
-                  VIEW IN HISTORY →
-                </Link>
               </div>
             )}
-
           </div>
 
           {/* Chat Panel */}
@@ -475,206 +348,107 @@ export default function Home() {
             }}>
               AI CHAT TERMINAL
             </h2>
->>>>>>> 8c02ef48f325ea3b08178f8e8c515fc25bb8ca7b
             <div style={{
-              padding: '20px',
-              border: '1px solid #f87171',
-              backgroundColor: '#fef2f2',
-              borderRadius: '12px',
-              marginTop: '20px',
-              color: '#dc2626',
-              fontWeight: '500'
+              height: '350px',
+              border: '3px solid black',
+              backgroundColor: '#000',
+              color: '#00ff00',
+              padding: '1.5rem',
+              overflowY: 'auto',
+              marginBottom: '1.5rem',
+              fontFamily: '"Courier New", monospace',
+              fontSize: '0.95rem',
+              lineHeight: 1.5,
+              boxShadow: 'inset 3px 3px 0 #333'
             }}>
-              {error}
-            </div>
-          )}
-
-          {result && (
-            <div style={{
-              padding: '32px',
-              backgroundColor: 'white',
-              border: '1px solid #eee',
-              borderRadius: '12px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
-              marginTop: '32px'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                gap: '24px', 
-                alignItems: 'flex-start',
-                marginBottom: '24px' 
-              }}>
-                <div style={{
-                  padding: '12px 24px',
-                  backgroundColor: getRiskStyle(result.risk_level).backgroundColor,
-                  color: getRiskStyle(result.risk_level).color,
-                  borderRadius: '8px',
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  textTransform: 'uppercase',
-                  minWidth: '160px',
-                  textAlign: 'center',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                }}>
-                  {result.risk_level} Risk
+              {chatMessages.length === 0 ? (
+                <div style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
+                  READY FOR INPUT...
                 </div>
-                <h3 style={{
-                  fontSize: '32px',
-                  fontWeight: '700',
-                  color: '#111',
-                  margin: 0,
-                  lineHeight: 1.2,
-                  flex: 1
-                }}>
-                  {result.summary}
-                </h3>
-              </div>
-              <p style={{
-                fontSize: '18px',
-                color: '#333',
-                lineHeight: 1.7,
-                margin: 0
-              }}>
-                {result.explanation}
-              </p>
-              <Link href="/history" style={{
-                display: 'inline-block',
-                marginTop: '24px',
-                padding: '16px 32px',
-                backgroundColor: '#10b981',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '12px',
-                fontWeight: '600',
-                fontSize: '16px',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
-              }}>
-                View History →
-              </Link>
-            </div>
-          )}
-        </section>
-
-        {/* Chat Section */}
-        <section style={{
-          padding: '32px',
-          backgroundColor: 'white',
-          border: '1px solid #eee',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#111',
-            marginBottom: '32px'
-          }}>
-            Ask Questions
-          </h2>
-          
-          <div style={{
-            height: '400px',
-            border: '1px solid #ddd',
-            borderRadius: '12px',
-            backgroundColor: '#f8f9fa',
-            padding: '24px',
-            overflowY: 'auto',
-            marginBottom: '24px',
-            fontFamily: 'monospace'
-          }}>
-            {chatMessages.length === 0 ? (
-              <div style={{ 
-                color: '#666', 
-                textAlign: 'center', 
-                padding: '48px 24px',
-                fontSize: '18px' 
-              }}>
-                Ask questions about your analysis above
-              </div>
-            ) : (
-              chatMessages.map((msg, idx) => (
-                <div key={idx} style={{
-                  marginBottom: '24px',
-                  padding: '20px',
-                  backgroundColor: msg.type === 'user' ? '#e3f2fd' : '#f1f3f4',
-                  borderRadius: '12px',
-                  maxWidth: '80%',
-                  marginLeft: msg.type === 'user' ? 'auto' : 0,
-                  marginRight: msg.type === 'user' ? 0 : 'auto',
-                  fontSize: '16px',
-                  lineHeight: 1.6,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                }}>
-                  <strong style={{ 
-                    color: msg.type === 'user' ? '#1976d2' : '#555',
-                    fontSize: '14px',
-                    textTransform: 'uppercase',
-                    marginBottom: '8px',
-                    display: 'block'
+              ) : (
+                chatMessages.map((msg, idx) => (
+                  <div key={idx} style={{
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    border: '2px solid #00ff00',
+                    backgroundColor: msg.type === 'user' ? '#001100' : '#001a00',
+                    maxWidth: '90%',
+                    marginLeft: msg.type === 'user' ? 'auto' : 0,
+                    borderRadius: 0
                   }}>
-                    {msg.type.toUpperCase()}
-                  </strong>
-                  {msg.text}
+                    <strong style={{ color: msg.type === 'user' ? '#ffff00' : '#00ff00' }}>
+                      {msg.type.toUpperCase()}
+                    </strong> {msg.text}
+                  </div>
+                ))
+              )}
+              {chatLoading && (
+                <div style={{
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  border: '2px solid #00ff00',
+                  backgroundColor: '#001a00',
+                  maxWidth: '90%'
+                }}>
+                  <strong style={{ color: '#00ff00' }}>AI</strong> Typing...
                 </div>
-              ))
-            )}
-            {chatLoading && (
-              <div style={{
-                marginBottom: '24px',
-                padding: '20px',
-                backgroundColor: '#f1f3f4',
-                borderRadius: '12px',
-                maxWidth: '80%',
-                fontSize: '16px'
-              }}>
-                <strong style={{ color: '#555', fontSize: '14px' }}>AI</strong>
-                <span> Thinking...</span>
-              </div>
-            )}
+              )}
+            </div>
+            <form onSubmit={handleSendChat} style={{ display: 'flex', gap: '1rem' }}>
+              <input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="ASK AI (Enter to send)"
+                style={{
+                  flex: 1,
+                  padding: '1rem 1.5rem',
+                  border: '3px solid black',
+                  backgroundColor: '#111',
+                  color: '#fff',
+                  fontFamily: '"Courier New", monospace',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  boxShadow: 'inset 3px 3px 0 #333'
+                }}
+                disabled={chatLoading}
+              />
+              <button
+                type="submit"
+                disabled={chatLoading || !chatInput.trim()}
+                style={{
+                  padding: '1rem 2rem',
+                  backgroundColor: '#ffff00',
+                  color: 'black',
+                  border: '4px solid black',
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  fontFamily: '"Arial Black", sans-serif',
+                  cursor: chatLoading ? 'not-allowed' : 'pointer',
+                  boxShadow: '6px 6px 0 black',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.1s'
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'translate(4px, 4px)';
+                  e.currentTarget.style.boxShadow = '2px 2px 0 black';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '6px 6px 0 black';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '6px 6px 0 black';
+                }}
+              >
+                TRANSMIT
+              </button>
+            </form>
           </div>
-
-          <form onSubmit={handleSendChat} style={{ display: 'flex', gap: '16px' }}>
-            <input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask about the transaction..."
-              style={{
-                flex: 1,
-                padding: '20px',
-                border: '1px solid #ddd',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontFamily: 'monospace',
-                outline: 'none',
-                backgroundColor: 'white',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-              }}
-              disabled={chatLoading}
-            />
-            <button
-              type="submit"
-              disabled={chatLoading || !chatInput.trim()}
-              style={{
-                padding: '20px 32px',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: chatLoading ? 'not-allowed' : 'pointer',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
-                transition: 'all 0.2s'
-              }}
-            >
-              Send
-            </button>
-          </form>
-        </section>
+        </div>
       </div>
     </main>
   );
 }
-
 
